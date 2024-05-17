@@ -1,3 +1,7 @@
+# large files
+
+toolboxes/k-wave-toolbox-version-1.4/k-Wave/binaries
+
 #######################################
 # Ignore backup and fsl_sub log files #
 #######################################
