@@ -3,11 +3,7 @@ function parameters = load_parameters(varargin)
 
     if nargin == 1
         extra_config_file = varargin{1};
-        try
-            extra_parameters = yaml.loadFile(fullfile('configs',extra_config_file), "ConvertToArray", true);         
-        catch
-            extra_parameters = yaml.loadFile(fullfile('configs','project_configs',extra_config_file), "ConvertToArray", true);         
-        end
+        extra_parameters = yaml.loadFile(fullfile('configs',extra_config_file), "ConvertToArray", true);
         parameters = MergeStruct(parameters, extra_parameters);
     elseif nargin == 2
         extra_config_file = varargin{1};
@@ -86,16 +82,39 @@ function parameters = load_parameters(varargin)
     end
  
     if isfield(parameters, 'ld_library_path') && parameters.ld_library_path ~= ""
-        assert(exist(parameters.ld_library_path, 'dir'), 'The path in parameters.ld_library_path does not exist')
+        if ~exist(parameters.ld_library_path, 'dir')
+            assert(all(confirmation_dlg('The path in parameters.ld_library_path does not exist, do you want to continue?','Yes','No')), 'Exiting');
+        end
     end
-    
+
     if isfield(parameters, 'simnibs_bin_path') && parameters.simnibs_bin_path ~= ""
-        assert(exist(fullfile(parameters.simnibs_bin_path, parameters.segmentation_software), 'file'), sprintf('The path segmentation software (%s) does not exist at %s.', parameters.segmentation_software, parameters.simnibs_bin_path))
+        if ~exist(fullfile(parameters.simnibs_bin_path, parameters.segmentation_software), 'file')
+            assert(all(confirmation_dlg([sprintf('The path segmentation software (%s) does not exist at %s.', ...
+                parameters.segmentation_software, parameters.simnibs_bin_path)...
+                ', do you want to continue?'],'Yes','No')), 'Exiting');
+        end
     end
-    
+         
     % set segmentation path to data_path if no specific seg_path is defined
     if ~isfield(parameters, 'seg_path') || parameters.seg_path == ""
         parameters.seg_path = parameters.data_path;
+    end
+    
+    % turn additional paths into separate cell strings
+    if isfield(parameters, 'paths_to_add')
+        if ~isempty(parameters.paths_to_add)
+            parameters.paths_to_add = cellstr(strsplit(parameters.paths_to_add, ';'));
+        end
+    end
+    if isfield(parameters, 'subpaths_to_add')
+        if ~isempty(parameters.subpaths_to_add)
+            parameters.subpaths_to_add = cellstr(strsplit(parameters.subpaths_to_add, ';'));
+        end
+    end
+    
+    % MATLAB version check
+    if verLessThan('matlab','9.13')
+       assert(all(confirmation_dlg('Matlab appears to be outdated. Please update before continuing. Do you want to continue?','Yes','No')), 'Exiting');
     end
 
 end
