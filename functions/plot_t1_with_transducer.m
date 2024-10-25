@@ -1,29 +1,33 @@
 function [res_image, transducer_pars] = plot_t1_with_transducer(t1_image, voxel_size_mm, trans_pos_grid, focus_pos_grid, parameters, plot_options)
     % Small script to create a plot of a T1 slice oriented along the transducer's axis 
 
+    % TODO does not yet show the (parts of the) bowls of the other
+    % transducers
+
     % Checks if all data is in the right format
     arguments
         t1_image (:,:,:) double
         voxel_size_mm (1,1) double
-        trans_pos_grid (1,3) double
-        focus_pos_grid (1,3) double
+        trans_pos_grid (:,3) double
+        focus_pos_grid (:,3) double
         parameters struct
         plot_options.slice_dim (1,1) double = 2
         plot_options.slice_ind (1,1) double = 0
+        plot_options.transducer_idx (1,1) double = 1
 
     end
 
     if isempty(plot_options.slice_ind) || plot_options.slice_ind == 0
-        plot_options.slice_ind = trans_pos_grid(plot_options.slice_dim);
+        plot_options.slice_ind = trans_pos_grid(1,plot_options.slice_dim);
     end
     
-    im_size = max(size(t1_image), trans_pos_grid);
+    im_size = max(size(t1_image), max(trans_pos_grid(:,:)));
     if ~isequal(im_size, size(t1_image))
         t1_image = padarray(t1_image, im_size-size(t1_image),'post');
     end
     
     % Create a transducer mask
-    [transducer_bowl, ~, transducer_pars] = transducer_setup(parameters.transducer, trans_pos_grid, focus_pos_grid, ...
+    [transducer_bowl, ~, transducer_pars] = transducer_setup(parameters.transducers(plot_options.transducer_idx), trans_pos_grid(1,:), focus_pos_grid(1,:), ...
                                                             im_size, voxel_size_mm);
     
     % Defines the transducer axis in a cell array

@@ -16,13 +16,19 @@ function [rotated_img, trans_pos_new, focus_pos_new, transformation_matrix, rota
 
     % First we create the transformation (affine) matrix for the voxel array.
 
-    focal_axis = [focus_pos_grid - trans_pos_grid, 1]';
+    if parameters.get_final_coords
+        % only consider first coord
+        focal_axis = [parameters.transducers(1).focus_pos_t1_grid - parameters.transducers(1).pos_t1_grid, 1]';
+    else
+        % consider current coord
+        focal_axis = [focus_pos_grid - trans_pos_grid, 1]';
+    end
 
     % First, the transformation of matrix (3d voxel array) indices.
     % The transformation is done by two sequential rotations to align the focal
     % axis with the z axis. 
 
-    % Rotate in Y first
+    %% Rotate in Y first
     % Compute the axis angle
     angle_y_rad  = atan(focal_axis(1) / focal_axis(3)); 
     if angle_y_rad < 0
@@ -34,7 +40,7 @@ function [rotated_img, trans_pos_new, focus_pos_new, transformation_matrix, rota
     % Compute rotated axis
     focal_axis_new = vox_transf_Y*focal_axis;
 
-    % Then rotate in X
+    %% Then rotate in X
     angle_x_rad  = atan(focal_axis_new(2) / focal_axis_new(3)); 
     % Create another affine matrix for X
     vox_transf_X  = makehgtform('xrotate', angle_x_rad);
@@ -71,11 +77,18 @@ function [rotated_img, trans_pos_new, focus_pos_new, transformation_matrix, rota
     rotated_img = tformarray(nii_image, TF, makeresampler('nearest', 'fill'), ...
         [1 2 3], [1 2 3], newdims, [], 0) ;
 
-    % And the new positions for the transducer and the focus can be computed
-    out_mat = round(tformfwd([trans_pos_grid; focus_pos_grid], TF));
+    % Concatenate trans_pos_grid (n x 3) and focus_pos_grid (1 x 3) % 
+    all_coords = [trans_pos_grid; focus_pos_grid];
 
-    trans_pos_new = out_mat(1,:);
-    focus_pos_new = out_mat(2,:);
+    % And the new positions for the transducer and the focus can be computed
+    out_mat = round(tformfwd(all_coords, TF));
+
+    % Get the number of rows in trans_pos_grid and focus_pos_grid
+    num_trans = size(trans_pos_grid, 1);
+    num_focus = size(focus_pos_grid, 1);
+
+    trans_pos_new = out_mat(1:num_trans, :);
+    focus_pos_new = out_mat(num_trans+1:num_trans+num_focus, :);
     
     % Create plots of the original T1 image with the transducer in addition
     % to the rotated T1 image

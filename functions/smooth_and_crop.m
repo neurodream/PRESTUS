@@ -78,7 +78,7 @@ function [medium_masks, skull_edge, segmented_image_cropped, trans_pos_final, fo
         smoothed_segmented_img_with_gaps = medium_masks;
 
         h = figure;
-        imshowpair(label2rgb(squeeze(segmented_img(:,trans_pos_upsampled_grid(2),:))), label2rgb(squeeze(medium_masks(:,trans_pos_upsampled_grid(2),:))), 'montage')
+        imshowpair(label2rgb(squeeze(segmented_img(:,trans_pos_upsampled_grid(1,2),:))), label2rgb(squeeze(medium_masks(:,trans_pos_upsampled_grid(1,2),:))), 'montage')
         title('Original (left) and smoothed (right) segmented images')
         output_plot_filename = fullfile(parameters.debug_dir, ...
             sprintf('sub-%03d_%s_segmented_img_smoothing_changes%s.png', ...
@@ -136,7 +136,7 @@ function [medium_masks, skull_edge, segmented_image_cropped, trans_pos_final, fo
 
         % Shows the segmented figures before and after closing the gaps side-by-side
         h = figure;
-        imshowpair(label2rgb(squeeze(smoothed_segmented_img_with_gaps(:,trans_pos_upsampled_grid(2),:))), label2rgb(squeeze(medium_masks(:,trans_pos_upsampled_grid(2),:))), 'montage')
+        imshowpair(label2rgb(squeeze(smoothed_segmented_img_with_gaps(:,trans_pos_upsampled_grid(1,2),:))), label2rgb(squeeze(medium_masks(:,trans_pos_upsampled_grid(1,2),:))), 'montage')
         title('Smoothed (left) and closed off (right) segmented images')
         output_plot_filename = fullfile(parameters.debug_dir, ...
             sprintf('sub-%03d_%s_segmented_img_closing_gaps_changes%s.png', ...
@@ -173,8 +173,8 @@ function [medium_masks, skull_edge, segmented_image_cropped, trans_pos_final, fo
 
         % Shows the unsmoothed and smoothed image side-by-side
         h = figure;
-        imshowpair(mat2gray(squeeze(skull_mask_unsmoothed(:,trans_pos_upsampled_grid(2),:))),...
-            mat2gray(squeeze(medium_masks(:,trans_pos_upsampled_grid(2),:))), 'montage');
+        imshowpair(mat2gray(squeeze(skull_mask_unsmoothed(:,trans_pos_upsampled_grid(1,2),:))),...
+            mat2gray(squeeze(medium_masks(:,trans_pos_upsampled_grid(1,2),:))), 'montage');
         title('Original (left) and smoothed (right) skull masks')
         output_plot_filename = fullfile(parameters.debug_dir, ...
             sprintf('sub-%03d_%s_skull_smoothing_changes%s.png', ...
@@ -211,12 +211,12 @@ function [medium_masks, skull_edge, segmented_image_cropped, trans_pos_final, fo
     % The csf will be expanded to be used as a guide for what bone tissue should be left in.
     
     % To do this, the csf volume will first be expanded by a lot.
-    SE = strel('cube', parameters.csf_mask_expansion_factor/voxel_size_mm);
+    SE = strel('cube', round(parameters.csf_mask_expansion_factor/voxel_size_mm));
     csf_mask_expanded = imdilate(csf_mask, SE);
     
     % Plots the result of the CSF expansion
     h = figure;
-    imshowpair(squeeze(medium_masks(:,trans_pos_upsampled_grid(2),:)), squeeze(csf_mask_expanded(:,trans_pos_upsampled_grid(2),:)), 'falsecolor')
+    imshowpair(squeeze(medium_masks(:,trans_pos_upsampled_grid(1,2),:)), squeeze(csf_mask_expanded(:,trans_pos_upsampled_grid(1,2),:)), 'falsecolor')
     title('CSF mask (pink) and the segmented image (white)')
     output_plot_filename = fullfile(parameters.debug_dir, ...
         sprintf('sub-%03d_%s_skull_csf_mask%s.png', ...
@@ -231,7 +231,11 @@ function [medium_masks, skull_edge, segmented_image_cropped, trans_pos_final, fo
     % bounds of the image dimensions
     medium_masks(~csf_mask_expanded) = 0;
     % calculate size if the transducer bowl
-    transducer_bowl = transducer_setup(parameters.transducer, trans_pos_upsampled_grid, focus_pos_upsampled_grid, size(segmented_img), voxel_size_mm);
+    transducer_bowl = zeros(size(segmented_img));
+    for transducer = parameters.transducers
+        transducer_bowl_single = transducer_setup(transducer, trans_pos_upsampled_grid(1,:), focus_pos_upsampled_grid(1,:), size(segmented_img), voxel_size_mm);
+        transducer_bowl = transducer_bowl + transducer_bowl_single; % TODO think to throw error here if transducers overlap
+    end
     [min_dims, max_dims, new_grid_dims] = get_crop_dims(medium_masks+transducer_bowl, crop_margin);
     
     % In case the minimum dimensions are too small, 
@@ -267,7 +271,10 @@ function [medium_masks, skull_edge, segmented_image_cropped, trans_pos_final, fo
     parameters.grid_dims = size(medium_masks);
 
     % moves the transducer and focus positions to the correct location in the cropped grid
-    trans_pos_final = trans_pos_upsampled_grid-min_dims;
+    trans_pos_final = trans_pos_upsampled_grid;
+    for i = 1:size(trans_pos_upsampled_grid, 1)
+        trans_pos_final(i,:) = trans_pos_upsampled_grid(i,:)-min_dims;
+    end
     focus_pos_final = focus_pos_upsampled_grid-min_dims;
     
     % create a translation matrix for later reference

@@ -1,5 +1,5 @@
 function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, focus_pos_final,...
-    t1_image, t1_header, final_transformation_matrix, inv_final_transformation_matrix] = preprocess_brain(parameters, subject_id)
+    t1_image, t1_header, final_transformation_matrix, inv_final_transformation_matrix] = preprocess_brain(parameters, subject_id, transducer_idx)
        
     % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
     %                  Preprocessing of structural data                 %
@@ -10,6 +10,18 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     % parameters for the skin, bone and neural tissue and to create     %
     % figures that allows one to view the simulation results.           %
     % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    transducer = parameters.transducers(transducer_idx);
+
+    % state variable to track if call to align_to_focus_axis_and_scale is only for plotting (0) or not (1)
+    % in the latter case, always rotate relative to first transducer
+    % TODO not yet adjusted in transducer_positioning
+    % TODO maybe better to make another input/output param for
+    % align_to_focus_axis_and_scale instead of setting the parameters
+    parameters.get_final_coords = 0;
+    
+    % TODO instead of wrapping all transducer.name references in here into
+    % a str, maybe better to do it once in read_parameters
 
     %% CHECK INPUTS AND TRANSLATE PATTERNS
     disp('Checking inputs...')
@@ -60,8 +72,8 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     else
         % If the localite file is not used, it takes the transducer
         % location from the config file
-        trans_pos_grid = parameters.transducer.pos_t1_grid';
-        focus_pos_grid = parameters.focus_pos_t1_grid';
+        trans_pos_grid = parameters.transducers(transducer_idx).pos_t1_grid';
+        focus_pos_grid = parameters.transducers(transducer_idx).focus_pos_t1_grid';
     end
     
     if size(trans_pos_grid,1)>size(trans_pos_grid, 2)
@@ -71,22 +83,23 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
 
     % Creates and exports an unprocessed T1 slice that is oriented 
     % along the transducer's axis
+    [t1_with_trans_img, ~] = plot_t1_with_transducer(...
+        t1_image, round(t1_header.PixelDimensions(1),2), trans_pos_grid, focus_pos_grid, parameters);
+    
     h = figure;
-    imshowpair(plot_t1_with_transducer(t1_image, t1_header.PixelDimensions(1), trans_pos_grid, focus_pos_grid, parameters), ...
-        plot_t1_with_transducer(t1_image, t1_header.PixelDimensions(1), trans_pos_grid, focus_pos_grid, parameters, 'slice_dim', 1),'montage');
-   
-    title('T1 with transducer');
+    imshow(rot90(t1_with_trans_img));
+    title(['T1 with transducer ' transducer.name]);
     output_plot_filename = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_t1_with_transducer_before_smoothing_and_cropping%s.png', ...
-        subject_id, parameters.results_filename_affix));
-    saveas(h, output_plot_filename, 'png')
-    close(h);
-
+        sprintf('sub-%03d_t1_with_transducer_before_smoothing_and_cropping_%s%s.png', ...
+        subject_id, string(transducer.name), parameters.results_filename_affix));
+    saveas(h, string(output_plot_filename), 'png')
+    close(h); clear t1_with_trans_img;
+    
     %% SEGMENTATION using SimNIBS
 
     disp('Starting segmentation...')
 
-    % Defines the names for the output folder of the segmented data
+    % Defines the names for the output folder of the segmented data align_to_focus_axis_and_scale
     segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', subject_id));
 
     if strcmp(parameters.segmentation_software, 'charm')
@@ -106,11 +119,11 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
             medium_masks = [];
             segmented_image_cropped = [];
             skull_edge = [];
-            trans_pos_final = [];
+            trans_pos_final = []; % TODO transd2 change here?
             focus_pos_final = [];
             final_transformation_matrix = [];
             inv_final_transformation_matrix = [];
-			return;
+            return;
         end
     else
         disp('Skipping, the file already exists, loading it instead.')
@@ -126,8 +139,8 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
 
     % Defines output file location and name
     filename_reoriented_scaled_data = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_after_rotating_and_scaling%s.mat', ...
-        subject_id, parameters.results_filename_affix));
+        sprintf('sub-%03d_after_rotating_and_scaling_%s%s.mat', ...
+        subject_id, string(transducer.name), parameters.results_filename_affix));
 
     if parameters.usepseudoCT == 1
         % Load pseudoCT
@@ -159,16 +172,15 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
         
         h = figure;
         imshow(t1_rr_img_montage)
-        title('Rotated (left) and original (right) original T1');
+        title(['Rotated (left) and original (right) original T1 ' transducer.name]);
         output_plot_filename = fullfile(parameters.debug_dir, ...
-            sprintf('sub-%03d_t1_after_rotating_and_scaling%s.png', ...
-            subject_id, parameters.results_filename_affix));
+            sprintf('sub-%03d_t1_after_rotating_and_scaling_%s%s.png', ...
+            subject_id, string(transducer.name), parameters.results_filename_affix));
         saveas(h, output_plot_filename, 'png')
         close(h); clear t1_rr_img_montage;
         
         % Rotate and scale the segmented T1 (tissue mask) to line up with the transducer's axis
-        [segmented_img_rr, trans_pos_upsampled_grid, focus_pos_upsampled_grid, ...
-            scale_rotate_recenter_matrix, rotation_matrix, ~, ~, segm_img_montage] = ...
+        [segmented_img_rr_for_plot, ~, ~, ~, ~, ~, ~, segm_img_montage] = ...
             align_to_focus_axis_and_scale(...
             tissues_mask_image, ...
             tissues_mask_header, ...
@@ -179,16 +191,26 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
         
         h = figure;
         imshow(segm_img_montage)
-        title('Rotated (left) and original (right) segmented T1');
+        title(['Rotated (left) and original (right) segmented T1 ' transducer.name]);
         output_plot_filename = fullfile(parameters.debug_dir, ...
-            sprintf('sub-%03d_segmented_after_rotating_and_scaling%s.png', ...
-            subject_id, parameters.results_filename_affix));
+            sprintf('sub-%03d_segmented_after_rotating_and_scaling_%s%s.png', ...
+            subject_id, string(transducer.name), parameters.results_filename_affix));
         saveas(h, output_plot_filename, 'png')
         close(h); clear segm_img_montage;
         
         % Rotate and scale the bone mask or pseudoCT to line up with the transducer's axis
         if parameters.usepseudoCT == 1
-            [bone_img_rr, ~, ~, ~, ~, ~, ~, bone_img_montage] = ...
+            parameters.get_final_coords = 1;
+            [bone_img_rr, ~, ~, ~, ~, ~, ~, ~] = ...
+                align_to_focus_axis_and_scale(...
+                pseudoCT_image, ...
+                pseudoCT_header, ...
+                trans_pos_grid, ...
+                focus_pos_grid, ...
+                pseudoCT_header.PixelDimensions(1)/parameters.grid_step_mm, ...
+                parameters);
+            parameters.get_final_coords = 0;
+            [~, ~, ~, ~, ~, ~, ~, bone_img_montage] = ...
                 align_to_focus_axis_and_scale(...
                 pseudoCT_image, ...
                 pseudoCT_header, ...
@@ -208,7 +230,17 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
                 filename_bone_headreco = fullfile(segmentation_folder, 'bone.nii.gz');
                 bone_img = niftiread(filename_bone_headreco);
             end
-            [bone_img_rr, ~, ~, ~, ~, ~, ~, bone_img_montage] = ...
+            parameters.get_final_coords = 1;
+            [bone_img_rr, ~, ~, ~, ~, ~, ~, ~] = ...
+                align_to_focus_axis_and_scale(...
+                bone_img, ...
+                tissues_mask_header, ...
+                trans_pos_grid, ...
+                focus_pos_grid, ...
+                tissues_mask_header.PixelDimensions(1)/parameters.grid_step_mm, ...
+                parameters);
+            parameters.get_final_coords = 0;
+            [~, ~, ~, ~, ~, ~, ~, bone_img_montage] = ...
                 align_to_focus_axis_and_scale(...
                 bone_img, ...
                 tissues_mask_header, ...
@@ -220,18 +252,39 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
 
         h = figure;
         imshow(bone_img_montage)
-        title('Rotated (left) and original (right) original bone mask');
-        output_plot_filename = fullfile(parameters.debug_dir, sprintf('sub-%03d_after_rotating_and_scaling_orig%s.png', ...
-            subject_id, parameters.results_filename_affix));
+        title(['Rotated (left) and original (right) original bone mask ' transducer.name]);
+        output_plot_filename = fullfile(parameters.debug_dir, sprintf('sub-%03d_after_rotating_and_scaling_orig_%s%s.png', ...
+            subject_id, string(transducer.name), parameters.results_filename_affix));
         saveas(h, output_plot_filename, 'png')
         close(h); clear bone_img_montage;
 
-        assert(isequal(size(trans_pos_upsampled_grid,1:2),size(focus_pos_upsampled_grid, 1:2)),...
+        % to ensure that all coordinates from all transducers are rotated
+        % and scaled equally, run the function again, but ensure that
+        % rotation is based only on the first transducer
+        parameters.get_final_coords = 1;
+        [segmented_img_rr, trans_pos_upsampled_grid, focus_pos_upsampled_grid, ...
+            scale_rotate_recenter_matrix, rotation_matrix, ~, ~, ~] = ...
+            align_to_focus_axis_and_scale(...
+            tissues_mask_image, ...
+            tissues_mask_header, ...
+            trans_pos_grid, ...
+            focus_pos_grid, ...
+            tissues_mask_header.PixelDimensions(1)/parameters.grid_step_mm, ...
+            parameters);
+
+        
+
+        parameters.get_final_coords = 0; % reset
+
+        % TODO is this important for downstream calculations (other than
+        % plotting)? because multiple transducers won't be aligned on one
+        % line in the same space
+        assert(isequal(size(trans_pos_upsampled_grid(1,:),1:2),size(focus_pos_upsampled_grid(1,:), 1:2)),...
             "After reorientation, the first two coordinates of the focus and the transducer should be the same")
 
         % Saves the output according to the naming convention set in the
         % beginning of this section
-        save(filename_reoriented_scaled_data, 'segmented_img_rr', 'trans_pos_upsampled_grid', 'bone_img_rr', 'focus_pos_upsampled_grid', 'scale_rotate_recenter_matrix', 'rotation_matrix', 't1_img_rr');
+        save(filename_reoriented_scaled_data, 'segmented_img_rr', 'segmented_img_rr_for_plot', 'trans_pos_upsampled_grid', 'bone_img_rr', 'focus_pos_upsampled_grid', 'scale_rotate_recenter_matrix', 'rotation_matrix', 't1_img_rr');
     else 
         disp('Skipping, the file already exists, loading it instead.')
         load(filename_reoriented_scaled_data);
@@ -244,8 +297,8 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     skullidx = getidx(parameters.layer_labels,'skull'); % includes all "skull_" segmentations
     skinidx = getidx(parameters.layer_labels,'skin');
     % unsmoothed skull & skin masks
-    skull_mask_unsmoothed = ismember(segmented_img_rr,skullidx);
-    skin_mask_unsmoothed = ismember(segmented_img_rr,skinidx);
+    skull_mask_unsmoothed = ismember(segmented_img_rr_for_plot,skullidx);
+    skin_mask_unsmoothed = ismember(segmented_img_rr_for_plot,skinidx);
 
     skin_slice = squeeze(skin_mask_unsmoothed(:,trans_pos_upsampled_grid(2),:));
     skull_slice = squeeze(skull_mask_unsmoothed(:,trans_pos_upsampled_grid(2),:));
@@ -259,20 +312,21 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     % Plot the different slices and an overlay for comparison
     h = figure;
     montage(cat(4, t1_slice*255, skin_skull_img*255, imfuse(mat2gray(t1_slice), skin_skull_img, 'blend')) ,'size',[1 NaN]);
-    title('T1 and SimNIBS skin (green) and skull (blue) masks');
+    title(['T1 and SimNIBS skin (green) and skull (blue) masks ' transducer.name]);
     output_plot_filename = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_t1_skin_skull%s.png', ...
-        subject_id, parameters.results_filename_affix));
+        sprintf('sub-%03d_t1_skin_skull_%s%s.png', ...
+        subject_id, string(transducer.name), parameters.results_filename_affix));
     saveas(h, output_plot_filename, 'png')
     close(h);
     
     %% SMOOTH & CROP SKULL
+    % TODO not quite sure if single files for each transducer are necessary
     disp('Smoothing and cropping the skull...')
 
     % Defines output file location and name
     filename_cropped_smoothed_skull_data = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_%s_after_cropping_and_smoothing%s.mat', ...
-        subject_id, parameters.simulation_medium, parameters.results_filename_affix));
+        sprintf('sub-%03d_%s_after_cropping_and_smoothing_%s%s.mat', ...
+        subject_id, parameters.simulation_medium, string(transducer.name), parameters.results_filename_affix));
     
     % Uses one of three functions to crop and smooth the skull
     % See each respected function for more documentation
@@ -302,14 +356,14 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     
     h = figure;
     imshow(seg_with_trans_img);
-    title('Segmentation with transducer');
+    title(['Segmentation with transducer ' transducer.name]);
     output_plot_filename = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_%s_segmented_brain_final%s.png', ...
-        subject_id, parameters.simulation_medium, parameters.results_filename_affix));
+        sprintf('sub-%03d_%s_segmented_brain_final_%s%s.png', ...
+        subject_id, parameters.simulation_medium, string(transducer.name), parameters.results_filename_affix));
     saveas(h, output_plot_filename, 'png')
     close(h);
 
-    % Check that the transformations are correct by inverting them and
+    %% Check that the transformations are correct by inverting them and
     % comparing to the original 
     if ~exist('inv_final_transformation_matrix','var')
         final_transformation_matrix = scale_rotate_recenter_matrix*crop_translation_matrix';
@@ -324,22 +378,24 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
         disp([trans_pos_final, focus_pos_final]')
         disp('Backtransformed coordinates')
         disp(backtransf_coordinates)
-        exit()
+        disp(backtransf_coordinates)
+        % exit() % TODO why is this exit here?
     end
     
     % Plot positioning of transducer on segmentation
-    output_plot_filename = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_positioning%s.png', ...
-        subject_id, parameters.results_filename_affix));
-    show_positioning_plots(...
-        tissues_mask_image,...
-        tissues_mask_header.PixelDimensions(1), ...
-        trans_pos_grid, ...
-        focus_pos_grid, ...
-        medium_masks, ...
-        trans_pos_final, ...
-        focus_pos_final, ...
-        parameters, ...
-        output_plot_filename)
+    % % TODO not yet implemented with multiple transducers
+    % output_plot_filename = fullfile(parameters.debug_dir, ...
+    %     sprintf('sub-%03d_positioning_%s%s.png', ...
+    %     subject_id, string(transducer.name), parameters.results_filename_affix));
+    % show_positioning_plots(...
+    %     tissues_mask_image,...
+    %     tissues_mask_header.PixelDimensions(1), ...
+    %     trans_pos_grid, ...
+    %     focus_pos_grid, ...
+    %     medium_masks, ...
+    %     trans_pos_final, ...
+    %     focus_pos_final, ...
+    %     parameters, ...
+    %     output_plot_filename)
 
 end

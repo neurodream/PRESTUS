@@ -1,6 +1,7 @@
 function parameters = load_parameters(varargin)
+    
     parameters = yaml.loadFile('configs/default_config.yaml', "ConvertToArray", true);
-
+    
     if nargin == 1
         extra_config_file = varargin{1};
         extra_parameters = yaml.loadFile(fullfile('configs',extra_config_file), "ConvertToArray", true);
@@ -14,6 +15,8 @@ function parameters = load_parameters(varargin)
 
     assert(parameters.interactive==0 || usejava('desktop'), 'Matlab should run in desktop mode if parameters.interactive is enabled in PRESTUS config');
 
+    % TODO this field will not be handled anymore downstream; expects
+    % 'transducers'
     if isfield(parameters, 'transducer')
         if ~isfield(parameters.transducer,'source_phase_rad')
             assert(isfield(parameters.transducer,'source_phase_deg'), 'Source phase should be set in transducer parameters as source_phase_rad or source_phase_deg')
@@ -40,6 +43,39 @@ function parameters = load_parameters(varargin)
         if ~isfield(parameters.transducer,'source_phase_deg')
             parameters.transducer.source_phase_deg = parameters.transducer.source_phase_rad/pi*180;
         end
+
+    elseif isfield(parameters, 'transducers')
+
+        for t_i = 1:numel(parameters.transducers)
+
+            if ~isfield(parameters.transducers(t_i),'source_phase_rad') || isempty(parameters.transducers(t_i).source_phase_rad) %~isfield(parameters.transducers(t_i),'source_phase_rad')
+                assert(isfield(parameters.transducers(t_i),'source_phase_deg') && ~isempty(parameters.transducers(t_i).source_phase_deg), 'Source phase should be set in transducer parameters as source_phase_rad or source_phase_deg')
+                parameters.transducers(t_i).source_phase_rad = parameters.transducers(t_i).source_phase_deg/180*pi;
+            end
+            if ~isfield(parameters.transducers(t_i),'dist_to_plane_mm') || isempty(parameters.transducers(t_i).dist_to_plane_mm) %~isfield(parameters.transducers(t_i),'dist_to_plane_mm')
+                parameters.transducers(t_i).dist_to_plane_mm = sqrt(parameters.transducers(t_i).curv_radius_mm^2-(max(parameters.transducers(t_i).Elements_OD_mm)/2)^2);
+                fprintf('Distance to transducer plane is not provided, calculated based on curvature radius and parameters.transducers(t_i) diameter as %.2f mm\n', parameters.transducers(t_i).dist_to_plane_mm)
+            end
+    
+            if length(parameters.transducers(t_i).source_amp)==1 && parameters.transducers(t_i).n_elements > 1
+                parameters.transducers(t_i).source_amp = repmat(parameters.transducers(t_i).source_amp, [1 parameters.transducers(t_i).n_elements]);
+            end
+            if iscell(parameters.transducers(t_i).source_phase_rad)
+                for i = 1:length(parameters.transducers(t_i).source_phase_rad)
+                    if ~isnumeric(parameters.transducers(t_i).source_phase_rad{i})
+                        parameters.transducers(t_i).source_phase_rad{i}= eval(parameters.transducers(t_i).source_phase_rad{i});
+                    end
+                end
+                parameters.transducers(t_i).source_phase_rad = cell2mat(parameters.transducers(t_i).source_phase_rad);
+                
+            end
+            
+            if ~isfield(parameters.transducers(t_i),'source_phase_deg') || isempty(parameters.transducers(t_i).source_phase_deg) %~isfield(parameters.transducers(t_i),'source_phase_deg')
+                parameters.transducers(t_i).source_phase_deg = parameters.transducers(t_i).source_phase_rad/pi*180;
+            end
+
+        end
+
     elseif nargin == 1
         assert(all(confirmation_dlg('The transducer info is missing in the configuration file, do you want to continue?','Yes','No')), 'Exiting');
     end

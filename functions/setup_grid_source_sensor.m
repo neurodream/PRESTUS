@@ -1,4 +1,4 @@
-function [kgrid, source, sensor, source_labels] = setup_grid_source_sensor(parameters, max_sound_speed, trans_pos_final, focus_pos_final, grid_time_step)
+function [kgrid, source, sensor, source_labels] = setup_grid_source_sensor(parameters, max_sound_speed, trans_pos_final, focus_pos_final)
     
     % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
     %                  Set up the transducer and sensor                 %
@@ -7,6 +7,8 @@ function [kgrid, source, sensor, source_labels] = setup_grid_source_sensor(param
     % during which simulations will take place and the sensor that      %
     % records the pressure-levels in the grid.                          %
     % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    % TODO trans_pos_final, focus_pos_final not referenced anymore
 
     % Creates a simulation grid in 3 or 2 dimensions
     if parameters.n_sim_dims == 3
@@ -18,16 +20,15 @@ function [kgrid, source, sensor, source_labels] = setup_grid_source_sensor(param
                       parameters.grid_dims(2), parameters.grid_step_m);
     end
     
-    wave_period   = 1 / parameters.transducer.source_freq_hz;                                                       % period [s]
+    % TODO figure out how to handle multiple source frequencies
+    source_freq_hz = parameters.transducers(1).source_freq_hz;
+    
+    wave_period   = 1 / source_freq_hz;                                                       % period [s]
     
     % Check the number of input arguments
-    % As a default the time step is based on the default CFL number of 0.3.
-    % If grid_time_step is given, it means that the transducer and sensor
-    % has to be set up again with a smaller time step due to simulation
-    % instability.
     if nargin < 5
         % Calculate the time step using an integer number of points per period
-        points_per_wavelength = max_sound_speed / (parameters.transducer.source_freq_hz * parameters.grid_step_m);      % points per wavelength
+        points_per_wavelength = max_sound_speed / (source_freq_hz * parameters.grid_step_m);      % points per wavelength
         cfl = 0.3;                                                                                                      % CFL number (kwave default)
         points_per_period = ceil(points_per_wavelength / cfl);                                                          % points per period
         grid_time_step = (wave_period / points_per_period)/2;                                                           % time step [s]  

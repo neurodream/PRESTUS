@@ -16,7 +16,8 @@ function [upsampled_image, transformation_matrix, trans_pos_new, focus_pos_new] 
 
     % and the new positions for the transducer and the focus can be computed
     out_mat = round(tformfwd([trans_pos_grid focus_pos_grid]', TF));
-
+    
+    % TODO does not seem to handle 2 transducer setup correctly
     trans_pos_new = out_mat(1,:)';
     focus_pos_new = out_mat(2,:)';
 end

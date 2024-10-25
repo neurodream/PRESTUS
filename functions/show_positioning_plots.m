@@ -2,11 +2,11 @@ function show_positioning_plots(segmented_img_orig, t1_pixel_size, trans_pos_ori
     arguments
         segmented_img_orig (:,:,:) 
         t1_pixel_size (1,1)
-        trans_pos_orig (1,3)
-        focus_pos_orig (1,3)
+        trans_pos_orig (:,3)
+        focus_pos_orig (:,3)
         segmented_img_final (:,:,:) 
-        trans_pos_final (1,3)
-        focus_pos_final (1,3)
+        trans_pos_final (:,3)
+        focus_pos_final (:,3)
         parameters struct
         output_plot string
     end
@@ -22,13 +22,15 @@ function show_positioning_plots(segmented_img_orig, t1_pixel_size, trans_pos_ori
         coord_mesh_xyz = gpuArray(coord_mesh_xyz);
     end
 
+    % TODO add option that (...?)
+
     h = figure('Position', [200 200 1000 300]);
     subplot(1,3,1)
-    show_3d_head(segmented_img_orig, focus_pos_orig, trans_pos_orig, parameters, ...
+    show_3d_head(segmented_img_orig, focus_pos_orig(1,:), trans_pos_orig(1,:), parameters, ...
         t1_pixel_size, coord_mesh_xyz, [0 0 0], view_pos, 0)
 
     subplot(1,3,2)
-    show_3d_head(segmented_img_orig, focus_pos_orig, trans_pos_orig, parameters, ...
+    show_3d_head(segmented_img_orig, focus_pos_orig(1,:), trans_pos_orig(1,:), parameters, ...
         t1_pixel_size, coord_mesh_xyz, slice_cap, view_pos, 0)
 
     ax3 = subplot(1,3,3);

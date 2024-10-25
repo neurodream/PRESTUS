@@ -25,6 +25,8 @@ function [bg_slice, transducer_bowl, Isppa_map, ax1, ax2, bg_min, bg_max, h] = .
         options.bg_range = []
         options.overlay_segmented = 0  
     end
+
+    % TODO implement handling of 2 transducers
     
     if any(focus_pos > size(bg_image))
         error('Focus point is outside of image boundaries')

@@ -77,8 +77,6 @@ function kwave_medium = setup_medium(parameters, medium_masks, pseudoCT)
                         alpha_min   = 4;
                         alpha_max   = 8.7;
                         offset_HU   = 1000;
-                        c_max       = 3100;     % max. speed of sound in skull (F. A. Duck, 2013.) [m/s]
-                        rho_max     = 2100;     % max. density in skull [kg/m3]
 
                         % Finds maximum and minimum values
                         HU_min = min(pseudoCT(:));
@@ -88,22 +86,17 @@ function kwave_medium = setup_medium(parameters, medium_masks, pseudoCT)
                         % Offset CT values to use housfield2density
                         pseudoCT(skull_idx) = pseudoCT(skull_idx) + offset_HU;
                         % replace negative values with 1 [JQK: regularize via minimum a la Yaakub?]
-                        % note: this does not account for the offset, but perhaps this is desired
                         pseudoCT(skull_idx) = max(pseudoCT(skull_idx),1);
                                         
                         % estimate density
                         density(skull_idx) = hounsfield2density(pseudoCT(skull_idx));
                         % regularize minimum density to water density
                         density(skull_idx) = max(density(skull_idx),medium.water.density);
-                        % regularize maximum density to rho_max
-                        density(skull_idx) = min(density(skull_idx),rho_max);
                                         
                         % estimate sound speed
                         sound_speed(skull_idx) = 1.33.*density(skull_idx) + 167;
                         % regularize minimum sound speed to water
                         sound_speed(skull_idx) = max(sound_speed(skull_idx),medium.water.sound_speed);
-                        % regularize maximum sound speed to c_max
-                        sound_speed(skull_idx) = min(sound_speed(skull_idx),c_max);
                                         
                         % remove initial offset
                         pseudoCT(skull_idx) = pseudoCT(skull_idx)-offset_HU;
@@ -111,33 +104,31 @@ function kwave_medium = setup_medium(parameters, medium_masks, pseudoCT)
                     case 'yaakub'
                         % see https://github.com/sitiny/BRIC_TUS_Simulation_Tools/blob/main/tussim_skull_3D.m
 
-                        c_water       = 1500;     % sound speed [m/s]
-                        c_skull       = 3100;     % max. speed of sound in skull (F. A. Duck, 2013.) [m/s]
-                        rho_water     = 1000;     % density [kg/m^3]
-                        rho_bone      = 1900;     % max. skull density [kg/m3]
+                        c_min         = 1500;     % sound speed [m/s]
+                        c_max         = 3100;     % max. speed of sound in skull (F. A. Duck, 2013.) [m/s]
+                        rho_min       = 1000;     % density [kg/m^3]
+                        rho_max       = 1900;     % max. skull density [kg/m3]
                         alpha_min     = 4;        % Aubry, J.-F. et al., 2022 (cortical bone; α (dB/cm at 500 kHz))
                         alpha_max     = 8.7;      % Fry 1978 at 0.5MHz: 1 Np/cm (8.7 dB/cm)
                         HU_min 	      = 300;	  % minimum HU considered as skull
                         HU_max 	      = 2000;	  % maximum skull HU for regularization
 
-                        % if observed max HU is lower than threshold, set HU_max to actual max
-                        HU_max = min(max(pseudoCT(skull_idx),[],'all'), HU_max);
+                        % if observed max HU  is lower than threshold, set HU_max to actual max
+                        HU_max = max(max(pseudoCT(skull_idx),[],'all'), HU_max)
 
                         % truncate CT HU (see Marsac et al., 2017)
                         % do not use pCT-based properties for presumed non-skull tissue
                         skull_idx(pseudoCT(skull_idx) < HU_min) = [];
                         % regularize upper HU to HU_max
-                        idx_HUtoohigh = pseudoCT(skull_idx) > HU_max;
-                        pseudoCT(skull_idx(idx_HUtoohigh)) = HU_max;
+                        pseudoCT(pseudoCT > HU_max) = HU_max;
 
                         % estimate density from CT HU based on Marsac et al., 2017 & Bancel et al., 2021
-                        % note: the original code hard-codes HU_min as 0, which may have been an error
-                        density(skull_idx) = rho_water + (rho_bone - rho_water) * ...
-                            (pseudoCT(skull_idx) - HU_min) / (HU_max - HU_min);
+                        density(skull_idx) = rho_min + (rho_max - rho_min) * ...
+                            (pseudoCT(skull_idx) - 0) / (HU_max - 0);
 
                         % estimate sound speed
-                        sound_speed(skull_idx) = c_water + (c_skull - c_water) * ...
-                            (density(skull_idx) - rho_water) / (rho_bone - rho_water);
+                        sound_speed(skull_idx) = c_min + (c_max - c_min) * ...
+                            (medium.density - rho_min) / (rho_max - rho_min);
                 end
 
                 % estimate attenuation coefficients
@@ -198,15 +189,16 @@ function kwave_medium = setup_medium(parameters, medium_masks, pseudoCT)
 
     alpha_power_fixed = 2;
 
+    % TODO figure out how to handle multiple source frequencies
     alpha_coeff = fitPowerLawParamsMulti(...
         alpha_0_true, ...
         alpha_power_true, ...
         sound_speed, ...
-        parameters.transducer.source_freq_hz, ...
+        parameters.transducers(1).source_freq_hz, ...
         alpha_power_fixed, ...
         false);
     
-    % Outputs the medium as a structure
+        % Outputs the medium as a structure
     kwave_medium = struct('sound_speed', sound_speed, ...
                           'density', density, ...
                           'alpha_coeff', alpha_coeff,...

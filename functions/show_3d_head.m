@@ -21,7 +21,7 @@ colormap(gray(80))
 
 segmented_img_to_plot = segmented_img(1:2:end,1:2:end,1:2:end);
 % crop if desired
-origin_shift = [0 0 0];
+origin_shift = [0 0 0];read_parameters
 if any(crop_at_target)
     original_size = size(segmented_img_to_plot);
     for i = 1:3
