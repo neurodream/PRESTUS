@@ -1,0 +1,5 @@
+function [parameters] = get_simulated_axial_intensity(parameters)
+
+
+
+end

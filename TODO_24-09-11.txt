@@ -1,0 +1,83 @@
+- automatic transducer pos
+- try to run Julians code
+	V smoothing skull: load from file
+	V not asking for overwriting
+	attenuation values - a bit unclear: only valid for 500k?
+		try values as they are right now, understand later...
+	log shows errors
+		trying with LD_lib_path now... seems to run through...
+			but still unsupported symbol error
+			likely because simnibs was copied to Julians folder
+		alternative if this does not run: (github compare for differences, and then) just run with adjusted params in own repo
+		quite some changes in single_sbj_pipeline as well - try to use Julians new one
+		CAREFUL storage in M!!
+	set all parameters correctly
+		implement the optimization for the desired profile
+			where are phases set??
+- add position second transducer
+- add transducer, standing waves
+- explore protocols (esp. DC)
+
+see ITK-snap: problem in adding second transducer: transforms like rotating and scaling need to be applied it seems; because
+- in setup_source function the target and transd pos only differ in one dimension (z!!)
+- % Rotate and scale the segmented T1 (tissue mask) to line up with the transducer's axis (in preprocess_brain function)
+
+
+% Rotate and scale the segmented T1 (tissue mask) to line up with the transducer's axis
+
+SART task:
+- in MRI session?
+	problem: maybe not everyone needs MRI session
+	two flies with one stone: apply drift diffusion modeling?
+	no baseline task?
+
+write Martin for pilot number strategy
+ask someone else
+
+
+problems:
+- if 2 transducers implemented in PRESTUS: 3 points (tr1, tr2, targ) - often no single image plane possible!
+
+questions:
+- consent form?? use the ethics template from DCC?
+- other prep for tmw: any other angle optimization needed?
+- light track of ECSW?
+- alpha values optimized for 500k
+- orthogonal transducers?
+- LUTZ: desk?
+- workgroup folder?
+
+mention:
+- traveling week from the 23rd, not reachable on Monday
+
+not yet:
+- visualization implemented in PRESTUS
+- maybe: heating results (and if, then show in ITK snap)
+
+PRESTUS wishlist:
+- 
+- multi-layer configs (e.g. one for study, and one on top: sbj) (maybe already implemented)
+
+
+grep -r --include="*.m" --exclude-dir="examples" "get_transducer_box" .
+
+occurrences of transducer param readouts:
+unctions/analyze_transducer_position_fast.m		X
+functions/analyze_transducer_position.m			X
+functions/get_transducer_box.m				!	just for showing positionings, not super important now
+functions/load_parameters.m				V
+functions/phase_optimization_annulus_full_curve.m	X
+functions/phase_optimization_annulus.m			X
+functions/plot_heating_sims.m				!	not 100 100 percent necessary
+functions/plot_isppa_over_image.m			!	not 100 100 percent necessary
+functions/plot_t1_with_transducer.m			!	not 100 100 percent necessary
+functions/preprocess_brain.m				!	not 100 100 percent necessary (seems only used for plotting)
+functions/run_heating_simulations.m			!	not 100 100 percent necessary (if assuming same source_freq_hz for both transducers)
+functions/run_simulations.m				!	not 100 100 percent necessary (if assuming same source_amp for transducers)
+functions/setup_grid_source_sensor.m			!	not 100 100 percent necessary (if assuming same source_amp for transducers)
+functions/setup_medium.m				!	not 100 100 percent necessary (if assuming same source_amp for transducers)
+functions/setup_source.m				replaced with two_transducers function
+functions/setup_source_two_transducers.m		V
+functions/show_3d_head.m				!	should hopefully be only for plotting
+functions/smooth_and_crop.m
+functions/transducer_positioning.m			X

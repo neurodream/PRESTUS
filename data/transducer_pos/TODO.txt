@@ -1,0 +1,3 @@
+add transducer to suffix; currently: all CTX500-024-010_77.0mm
+add the angle identifier (i.e. when manual changes to transducer positions)
+	...but also check: are these really different tpars values??

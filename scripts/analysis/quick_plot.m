@@ -1,0 +1,2 @@
+% load('M:\Documents\repos\PRESTUS_forked\data\transducer_pos\sub-003\sub-003_layered_results_NBM_right_duty_45_trials_400_amp_105001.mat');
+load('M:\Documents\repos\PRESTUS_forked\data\transducer_pos\sub-003\sub-003_layered_heating_res_NBM_right_duty_45_trials_400_amp_105001.mat');

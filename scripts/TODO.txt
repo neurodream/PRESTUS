@@ -1,0 +1,8 @@
+- add own scripts adapted from Martin here
+- ensure that references within files work after moving these files
+
+- entry script "single_subject_pipeline.m" is way too conflated already:
+	- create a more high-level entry script that makes sense from a user perspective
+	- think: what should be achieved?
+		- a protocol "builder"
+		
