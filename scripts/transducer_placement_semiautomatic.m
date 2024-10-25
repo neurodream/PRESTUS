@@ -3,7 +3,7 @@
 close all; clear; clc;
 
 % adjust to your path
-cd M:/Documents/repos/PRESTUS_forked/;
+cd /home/sleep/nicade/Documents/repos/PRESTUS_forked/;
 
 addpath('functions')
 addpath(genpath('toolboxes'))
@@ -15,7 +15,7 @@ for sbj_ID = 1:numel(all_files)/2
     matching_files = all_files(contains({all_files.name}, sprintf('%03d', sbj_ID)));
     for direction = {'left', 'right'}
         matching_dir_file = matching_files(contains({matching_files.name}, direction));
-        T = readtable(fullfile(pwd, '\data\transducer_pos', matching_dir_file.name));
+        T = readtable(fullfile(pwd, 'data/transducer_pos', matching_dir_file.name));
         sbj_targets(sbj_ID).(direction{1}) = [T.targ_y(1) T.targ_x(1) T.targ_z(1)];
     end
     disp(['subject ' num2str(sbj_ID) ' done.']);
@@ -24,13 +24,13 @@ clear all_files sbj_ID matching_files direction matching_dir_file T
 
 %%
 
-sbj_ID = 1;
+sbj_ID = 6;
 
 target_L = sbj_targets(sbj_ID).left;
 target_R = sbj_targets(sbj_ID).right;
 
 % make sure the subject ID match of seg_file and target:
-seg_file = ['M:\Documents\scans\segmentation_results\m2m_sub-' sprintf('%03d', sbj_ID) '\final_tissues.nii.gz'];
+seg_file = ['/home/sleep/nicade/Documents/scans/segmentation_results/m2m_sub-' sprintf('%03d', sbj_ID) '/final_tissues.nii.gz'];
 
 layers = niftiread(seg_file);
 layers_info = niftiinfo(seg_file);
@@ -54,27 +54,27 @@ clear seg_file transformMatrix
 % should be target L or R, but remove/add 5 in two dimensions
 % defacto_target_L = [target_L(1), target_L(2) - 5, target_L(3) - 5]; %[144 91 144];
 % defacto_target_R = [target_R(1), target_R(2) + 5, target_R(3) - 5]; %[144 135 145];
-defacto_target_L = [target_L(1), target_L(2), target_L(3) + 2]; %[144 91 144];
-defacto_target_R = [target_R(1), target_R(2), target_R(3) + 2]; %[144 135 145];
+defacto_target_L = [target_L(1), target_L(2), target_L(3)]; %[144 91 144];
+defacto_target_R = [target_R(1), target_R(2), target_R(3)]; %[144 135 145];
 
 % location of the center of the exit plane (?) of the transducer
-[~, source_R] = get_transducer_voxels(defacto_target_L, [0  1 0], head, parameters, '', 'red');
-[~, source_L] = get_transducer_voxels(defacto_target_L, [0 -1 0], head, parameters, '', 'red');
+[~, source_L] = get_transducer_voxels(defacto_target_L, [0.2 -1 0], head, parameters, '', 'red');
+[~, source_R] = get_transducer_voxels(defacto_target_R, [0.2  1 0], head, parameters, '', 'red');
 % source_L = [144.0000 24.6392 169.2794];
 
 % left transducer
 % left NBM
-effective_target_L_ipsi = point_line_projection_3D(target_L, source_L, defacto_target_R);
+% effective_target_L_ipsi = point_line_projection_3D(target_L, source_L, defacto_target_R);
 % right NBM
-effective_target_L_contra = point_line_projection_3D(target_R, source_L, defacto_target_R);
+effective_target_L_contra = point_line_projection_3D(defacto_target_R, source_L, target_L);
 
 % right transducer
 % left NBM
-effective_target_R_contra = point_line_projection_3D(target_L, source_R, defacto_target_L);
+effective_target_R_contra = point_line_projection_3D(defacto_target_L, source_R, target_R);
 % right NBM
-effective_target_R_ipsi = point_line_projection_3D(target_R, source_R, defacto_target_L);
+% effective_target_R_ipsi = point_line_projection_3D(target_R, source_R, defacto_target_L);
 
-close all;
+close all; clc;
 
 %% create figure with head/skull and targets
 
@@ -109,8 +109,8 @@ lighting gouraud;
 
 % remove a transducer by calling: delete(findobj('Tag', transducer_name));
 
-get_transducer_voxels(defacto_target_L, [0 -1 0], head, parameters, 'transd1', '#0072BD');
-get_transducer_voxels(defacto_target_R, [0 1 0], head, parameters, 'transd2', '#A2142F');
+get_transducer_voxels(defacto_target_L, [0.2 -1 0], head, parameters, 'transd1', '#0072BD');
+get_transducer_voxels(effective_target_R_contra, [0.2 1 0], head, parameters, 'transd2', '#A2142F');
 
 view(62, 36);
 
