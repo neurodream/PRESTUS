@@ -1,4 +1,4 @@
-function [error, ax1, ax2, h, i_axial_oneil] = phase_optimization_annulus_full_curve(phase, parameters, velocity, axial_position, desired_intensity_curve, plot_results, opt_limits, weights)
+function [error, ax1, ax2, h, i_axial_oneil] = phase_optimization_annulus_full_curve_all_elements(phase, parameters, velocity, axial_position, desired_intensity_curve, plot_results, opt_limits, weights)
   arguments
       phase
       parameters
@@ -12,7 +12,7 @@ function [error, ax1, ax2, h, i_axial_oneil] = phase_optimization_annulus_full_c
   limit_ind = (axial_position>=opt_limits(1)&axial_position<=opt_limits(2));
   p_axial_oneil = focusedAnnulusONeil(parameters.transducer.curv_radius_mm/1e3, ...
     [parameters.transducer.Elements_ID_mm; parameters.transducer.Elements_OD_mm]/1e3, repmat(velocity,1,parameters.transducer.n_elements), ...
-    [0 phase], parameters.transducer.source_freq_hz, parameters.medium.water.sound_speed, ...
+    phase, parameters.transducer.source_freq_hz, parameters.medium.water.sound_speed, ...
     parameters.medium.water.density, (axial_position-0.5)*1e-3);
   
   i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*parameters.medium.water.density) .* 1e-4;
