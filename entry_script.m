@@ -1,6 +1,7 @@
 close all; clear; clc;
 
-cd /home/sleep/nicade/Documents/repos/PRESTUS_Julian/;
+cd(fileparts(mfilename('fullpath')));
+% cd /home/sleep/nicade/Documents/repos/PRESTUS_Julian/;
 
 % add paths
 addpath('functions')
@@ -9,26 +10,36 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 
 %%
 
+% base config ("hard" params)
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
+% "soft" params for this run
 subject_id = 5;
-ID = '_L+y--l_R+y--r_';
+ID = '_L+y--l_R+y--r_'; % see nomenclature in loop
+transducer_labels   = {'L',         'R'};
+focal_distances_mm  = [63.7943      64.691]; % TODO automatic readout from get_transducer_pos
+dirs                = {'l',         'r'};
+angles              = [0.2 -1 0;    0.2 1 0];
+transd_pos_shift    = [0 0 0;       0 0 0];
+focus_pos_shift     = [0 0 0;       0 0 0];
 
 parameters.results_filename_affix = ID;
 
-parameters.transducers(1).name = 'L';
-parameters = calculate_transducer_phases(parameters, 1, 63.7943, 15, 100);
-parameters = get_transducer_pos(parameters, subject_id, 'l', 1, [0.2 -1 0], [0 0 0], [0 0 0]);
-parameters.transducers(2).name = 'R';
-parameters = calculate_transducer_phases(parameters, 2, 64.691, 15, 100);
-parameters = get_transducer_pos(parameters, subject_id, 'r', 2, [0.2 1 0], [0 0 0], [0 0 0]);
+for i = 1:numel(parameters.transducers)
+    parameters.transducers(i).name = transducer_labels{i};
+    parameters = calculate_transducer_phases(parameters, i, focal_distances_mm(i), 15, 100);
+    parameters = get_transducer_pos(parameters, subject_id, dirs{i}, i, angles(i,:), transd_pos_shift(i,:), focus_pos_shift(i,:));
+end
 
+% last parameter: where to add position noise ('none' means perfect
+% positioning)
+update_transducers_and_run(subject_id, parameters, ID, 'none');
 update_transducers_and_run(subject_id, parameters, [ID 'var1'], 'transducer');
-% update_transducers_and_run(subject_id, parameters, [ID 'var2'], 'transducer');
-% update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
-% update_transducers_and_run(subject_id, parameters, [ID 'var4'], 'focus');
-% update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
-% update_transducers_and_run(subject_id, parameters, [ID 'var6'], 'both');
+update_transducers_and_run(subject_id, parameters, [ID 'var2'], 'transducer');
+update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
+update_transducers_and_run(subject_id, parameters, [ID 'var4'], 'focus');
+update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
+update_transducers_and_run(subject_id, parameters, [ID 'var6'], 'both');
 
 
 
@@ -38,6 +49,10 @@ update_transducers_and_run(subject_id, parameters, [ID 'var1'], 'transducer');
 
 
 %% old
+
+% parameters.transducers(2).name = 'R';
+% parameters = calculate_transducer_phases(parameters, 2, 64.691, 15, 100);
+% parameters = get_transducer_pos(parameters, subject_id, 'r', 2, [0.2 1 0], [0 0 0], [0 0 0]);
 
 % f1 = parameters.transducers(1).focus_pos_t1_grid;
 % f2 = parameters.transducers(2).focus_pos_t1_grid;
