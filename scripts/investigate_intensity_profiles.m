@@ -10,8 +10,8 @@ addpath(genpath('/home/sleep/nicade/Documents/repos/PRESTUS_forked/toolboxes'));
 
 cd /home/sleep/nicade/Documents/scans/sim_outputs/;
 
-subj_ID = 1;
-ID = '_L--r_R--r_2_';
+subj_ID = 3;
+ID = '_L+y+z--l+z_R+y+z--r+z_';
 % ID = '_L--r_R--r_var1';
 % ID = 'nearparallel_var4_';
 
@@ -25,3 +25,9 @@ figure; hold on;
 plot(parameters.transducers(1).axial_position, parameters.transducers(1).axial_intensity_sim_FW);
 plot(parameters.transducers(2).axial_position, parameters.transducers(2).axial_intensity_sim_FW);
 legend(parameters.transducers(1).name, parameters.transducers(2).name);
+
+% cd ..
+% cd ..
+% cd scans/sim_outputs/sub-003/debug/
+% load('sub-003_parameters_L+y+z--l+z_R+y+z--l+z__251024_2055.mat')
+% parameters2 = parameters;

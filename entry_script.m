@@ -8,28 +8,46 @@ addpath('functions')
 addpath(genpath('toolboxes')) 
 addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donders HPC
 
-%%
+%% adjust params here:
+
+subject_id = 5;
+
+% adjust as needed
+transducer_labels   = {'L',         'R'};
+ID_parts            = {'L+y-z--l-z',    'R+y-z--l-z'};
+% focal_distances_mm  = [63.7943      97.935]; % TODO automatic readout from get_transducer_pos
+contralateral       = [false,        true];
+dirs                = {'l',         'r'}; % i.e. target side
+sham                = [false        false]; % CAREFUL!!!!!! TODO just one; and add to ID!
+angles              = [0.2 -1 0;    0.2 1 0]; % careful: x and y swapped here!! TODO!
+transd_pos_shift    = [0 0 -3;       0 0 -3];
+focus_pos_shift     = [0 0 -3;       0 0 -3];
 
 % base config ("hard" params)
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
-% "soft" params for this run
-subject_id = 6;
-ID = '_L+y--l_R+y--l_'; % see nomenclature in loop
 
-transducer_labels   = {'L',         'R'};
-focal_distances_mm  = [63.7915      97.9399]; % TODO automatic readout from get_transducer_pos
-dirs                = {'l',         'r'};
-angles              = [0.2 -1 0;    0.2 1 0];
-transd_pos_shift    = [0 0 0;       0 0 0];
-focus_pos_shift     = [0 0 0;       0 0 0];
 
-parameters.results_filename_affix = ID;
+%%
+
+ID = ['_' strjoin(ID_parts, '_') '_']; % TODO make sham a variable!
+parameters.results_filename_affix = ID; % TODO this line needed? but also not dangerous
 
 for i = 1:numel(parameters.transducers)
+
     parameters.transducers(i).name = transducer_labels{i};
-    parameters = calculate_transducer_phases(parameters, i, focal_distances_mm(i), 15, 100);
-    parameters = get_transducer_pos(parameters, subject_id, dirs{i}, i, angles(i,:), transd_pos_shift(i,:), focus_pos_shift(i,:));
+    [parameters, distance] = get_transducer_pos(parameters, subject_id, dirs{i}, i, angles(i,:), transd_pos_shift(i,:), focus_pos_shift(i,:), contralateral(i));
+    parameters = calculate_transducer_phases(parameters, i, distance, 15, 100, sham(i));
+    % parameters = calculate_transducer_phases(parameters, i, focal_distances_mm(i), 15, 100, sham(i));
+
+    % store the indended parameters for later debugging:
+    parameters.transducers(i).optim_params = [];
+    % parameters.transducers(i).optim_params.focal_distance_mm = focal_distances_mm(i);
+    parameters.transducers(i).optim_params.focal_distance_mm = distance;
+    parameters.transducers(i).optim_params.angle = angles(i,:);
+    parameters.transducers(i).optim_params.transd_pos_shift = transd_pos_shift(i,:);
+    parameters.transducers(i).optim_params.focus_pos_shift = focus_pos_shift(i,:);
+
 end
 
 % last parameter: where to add position noise ('none' means perfect

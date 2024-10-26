@@ -2,29 +2,33 @@
 
 close all; clear; clc;
 
+% TODO: flip x and y (careful: then also in the other scripts!)
+
+sbj_ID = 5;
+angle_L = [0.2 -1 0];
+angle_R = [0.2  1 0];
+
 % adjust to your path
 cd /home/sleep/nicade/Documents/repos/PRESTUS_forked/;
 
 addpath('functions')
 addpath(genpath('toolboxes'))
 
-% automatic readout of coordinates
+% automatic readout of coordinates (TODO: read out from table)
 all_files = dir(fullfile(pwd, 'data/transducer_pos', 'tpars*.csv'));
 sbj_targets = []; %struct(numel(all_files));
-for sbj_ID = 1:numel(all_files)/2
-    matching_files = all_files(contains({all_files.name}, sprintf('%03d', sbj_ID)));
+for sID = 1:numel(all_files)/2
+    matching_files = all_files(contains({all_files.name}, sprintf('%03d', sID)));
     for direction = {'left', 'right'}
         matching_dir_file = matching_files(contains({matching_files.name}, direction));
         T = readtable(fullfile(pwd, 'data/transducer_pos', matching_dir_file.name));
-        sbj_targets(sbj_ID).(direction{1}) = [T.targ_y(1) T.targ_x(1) T.targ_z(1)];
+        sbj_targets(sID).(direction{1}) = [T.targ_y(1) T.targ_x(1) T.targ_z(1)];
     end
-    disp(['subject ' num2str(sbj_ID) ' done.']);
+    disp(['subject ' num2str(sID) ' done.']);
 end
-clear all_files sbj_ID matching_files direction matching_dir_file T
+clear all_files sID matching_files direction matching_dir_file T
 
 %%
-
-sbj_ID = 6;
 
 target_L = sbj_targets(sbj_ID).left;
 target_R = sbj_targets(sbj_ID).right;
@@ -58,8 +62,8 @@ defacto_target_L = [target_L(1), target_L(2), target_L(3)]; %[144 91 144];
 defacto_target_R = [target_R(1), target_R(2), target_R(3)]; %[144 135 145];
 
 % location of the center of the exit plane (?) of the transducer
-[~, source_L] = get_transducer_voxels(defacto_target_L, [0.2 -1 0], head, parameters, '', 'red');
-[~, source_R] = get_transducer_voxels(defacto_target_R, [0.2  1 0], head, parameters, '', 'red');
+[~, source_L] = get_transducer_voxels(defacto_target_L, angle_L, head, parameters, '', 'red');
+[~, source_R] = get_transducer_voxels(defacto_target_R, angle_R, head, parameters, '', 'red');
 % source_L = [144.0000 24.6392 169.2794];
 
 % left transducer
@@ -109,8 +113,8 @@ lighting gouraud;
 
 % remove a transducer by calling: delete(findobj('Tag', transducer_name));
 
-get_transducer_voxels(defacto_target_L, [0.2 -1 0], head, parameters, 'transd1', '#0072BD');
-get_transducer_voxels(effective_target_R_contra, [0.2 1 0], head, parameters, 'transd2', '#A2142F');
+get_transducer_voxels(defacto_target_L, angle_L, head, parameters, 'transd1', '#0072BD');
+get_transducer_voxels(effective_target_R_contra, angle_R, head, parameters, 'transd2', '#A2142F');
 
 view(62, 36);
 

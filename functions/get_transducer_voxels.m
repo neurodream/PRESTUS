@@ -1,4 +1,4 @@
-function [transducer_voxels, trans_pos] = get_transducer_voxels(target, direction, matter, parameters, patch_name, transducer_color)
+function [transducer_voxels, trans_pos, distance_mm] = get_transducer_voxels(target, direction, matter, parameters, patch_name, transducer_color)
 
     grid_dims = size(matter);
 
@@ -71,5 +71,7 @@ function [transducer_voxels, trans_pos] = get_transducer_voxels(target, directio
 
     % also show the transducer coords
     disp(['transducer coordinates: ', round(num2str(trans_pos(1))), ' ', round(num2str(trans_pos(2))), ' ', round(num2str(trans_pos(3)))]);
+
+    distance_mm = line_length;
 
 end
