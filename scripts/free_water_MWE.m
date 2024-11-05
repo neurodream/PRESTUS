@@ -2,7 +2,9 @@ clear; close all; clc;
 
 % load the functions of PRESTUS and kWave
 
-rootpath = '/home/sleep/nicade/Documents/repos/PRESTUS_forked';
+currentFile = matlab.desktop.editor.getActiveFilename;
+rootpath = fileparts(fileparts(currentFile));
+
 addpath(fullfile(rootpath, 'functions'));
 addpath(fullfile(rootpath, 'toolboxes', 'k-wave-toolbox-version-1.4', 'k-Wave'));
 addpath(fullfile(rootpath, 'toolboxes', 'FEX-minimize'));

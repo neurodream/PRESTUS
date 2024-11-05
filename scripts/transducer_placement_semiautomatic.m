@@ -8,8 +8,9 @@ sbj_ID = 5;
 angle_L = [0.2 -1 0];
 angle_R = [0.2  1 0];
 
-% adjust to your path
-cd /home/sleep/nicade/Documents/repos/PRESTUS_forked/;
+currentFile = matlab.desktop.editor.getActiveFilename;
+rootpath = fileparts(fileparts(currentFile));
+cd rootpath;
 
 addpath('functions')
 addpath(genpath('toolboxes'))
@@ -34,7 +35,7 @@ target_L = sbj_targets(sbj_ID).left;
 target_R = sbj_targets(sbj_ID).right;
 
 % make sure the subject ID match of seg_file and target:
-seg_file = ['/home/sleep/nicade/Documents/scans/segmentation_results/m2m_sub-' sprintf('%03d', sbj_ID) '/final_tissues.nii.gz'];
+seg_file = fullfile(parameters.seg_path, ['m2m_sub-' sprintf('%03d', sbj_ID)], 'final_tissues.nii.gz');
 
 layers = niftiread(seg_file);
 layers_info = niftiinfo(seg_file);

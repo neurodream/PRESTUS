@@ -2,6 +2,8 @@ function [parameters, distance] = get_transducer_pos(parameters, sbj_ID, side, t
 
 % overwrites the respective parameters fields
 
+% TODO (identify cause of and) get rid of x y flip
+
 % temporarily add a transducer field so old PRESTUS functions can be used
 parameters.transducer = parameters.transducers(transd_ind);
 
@@ -30,7 +32,7 @@ end
 %%
 
 % make sure the subject ID match of seg_file and target:
-seg_file = ['/home/sleep/nicade/Documents/scans/segmentation_results/m2m_sub-' sprintf('%03d', sbj_ID) '/final_tissues.nii.gz'];
+seg_file = fullfile(parameters.seg_path, ['m2m_sub-' sprintf('%03d', sbj_ID)], 'final_tissues.nii.gz');
 
 layers = niftiread(seg_file);
 layers_info = niftiinfo(seg_file);

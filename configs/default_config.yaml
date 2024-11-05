@@ -5,7 +5,12 @@
 #------------ This first segment of the config contains parameters mandatory for running a pipeline
 
 # Paths to the data location and SimNIBS environment (please use full paths)
-data_path: NA
+# Paths to the data location and SimNIBS environment (please use full paths)
+data_path: /home/sleep/nicade/Documents/scans/
+#simnibs_bin_path: /home/neuromod/julkos/SimNIBS/bin
+
+seg_path: /home/sleep/nicade/Documents/scans/segmentation_results/
+
 simnibs_bin_path: /opt/simnibs/4.0.0/simnibs_env/bin/
 # /opt/simnibs/4.0.0/bin/
 

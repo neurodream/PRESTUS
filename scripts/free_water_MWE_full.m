@@ -4,7 +4,9 @@ clear; close all; clc;
 
 % load the functions of PRESTUS and kWave
 
-rootpath = '/home/sleep/nicade/Documents/repos/PRESTUS_forked';
+currentFile = matlab.desktop.editor.getActiveFilename;
+rootpath = fileparts(fileparts(currentFile));
+
 addpath(fullfile(rootpath, 'functions'));
 addpath(fullfile(rootpath, 'toolboxes', 'k-wave-toolbox-version-1.4', 'k-Wave'));
 addpath(fullfile(rootpath, 'toolboxes', 'FEX-minimize'));
@@ -321,7 +323,7 @@ parameters.transducer.source_freq_hz = source_freq_hz;
 parameters.medium.water.sound_speed = sound_speed;
 parameters.medium.water.density = density;
 
-cd '/home/sleep/nicade/Documents/repos/PRESTUS_forked';
+cd rootpath;
 % load('scripts/tests/parameter_comparison_MWE.mat');
 % load('scripts/tests/parameter_comparison_MWE_2.mat');
 % parameters = param_cmp.parameters;

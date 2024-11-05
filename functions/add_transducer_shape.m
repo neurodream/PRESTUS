@@ -17,6 +17,7 @@ function add_transducer_shape(pos, target, varargin)
     addParameter(p, 'TargetType', 'sphere', @ischar); % can be 'sphere', 'line', 'none', 'both'
     addParameter(p, 'PatchName', 'transducerPatch', @ischar);
     addParameter(p, 'Parameters', default_params, @isstruct);
+    addParameter(p, 'Color', [0.5, 0.5, 0.5]);
     
     % Parse input arguments
     parse(p, varargin{:});
@@ -28,6 +29,7 @@ function add_transducer_shape(pos, target, varargin)
     target_type       = p.Results.TargetType;
     patch_name        = p.Results.PatchName;
     parameters        = p.Results.Parameters;
+    color             = p.Results.Color;
 
     % Ensure 'pos' is a vector of length 3
     assert(numel(pos) == 3, 'Input "pos" must be a vector of length 3.');
@@ -152,7 +154,7 @@ function add_transducer_shape(pos, target, varargin)
     
     % Create the patch
     bowl2case = patch('Vertices', vertices, 'Faces', faces, ...
-                      'FaceColor', 'b', 'FaceAlpha', 0.5);
+                      'FaceColor', color); % , 'FaceAlpha', 0.5
 
 
     % remove NaNs from bowl
@@ -186,25 +188,25 @@ function add_transducer_shape(pos, target, varargin)
     if strcmp(target_type, 'sphere')
         target_patch = plot_sphere(5, target);
     elseif strcmp(target_type, 'line')
-        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], 'black', 'LineWidth', 2);
+        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], color, 'LineWidth', 2);
     elseif strcmp(target_type, 'both')
         target_patch = plot_sphere(5, target);
-        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], 'black', 'LineWidth', 2);
+        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], color, 'LineWidth', 2);
     end
 
     %% Set patch properties
-    casing.FaceColor = [0.5, 0.5, 0.5];
-    casing.FaceAlpha = 0.6;%0.9;
+    casing.FaceColor = color;
+    % casing.FaceAlpha = 0.6;%0.9;
     casing.EdgeColor = 'none';
     casing.Tag = patch_name;
     
-    bowl.FaceColor = [0.5, 0.5, 0.5];
-    bowl.FaceAlpha = 0.6;%0.9;
+    bowl.FaceColor = color;
+    % bowl.FaceAlpha = 0.6;%0.9;
     bowl.EdgeColor = 'none';
     bowl.Tag = patch_name;
 
-    bowl2case.FaceColor = [0.5, 0.5, 0.5];
-    bowl2case.FaceAlpha = 0.6;%0.9;
+    bowl2case.FaceColor = color;
+    % bowl2case.FaceAlpha = 0.6;%0.9;
     bowl2case.EdgeColor = 'none';
     bowl2case.Tag = patch_name;
 

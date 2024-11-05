@@ -1,7 +1,8 @@
 close all; clear; clc;
 
-cd(fileparts(mfilename('fullpath')));
-% cd /home/sleep/nicade/Documents/repos/PRESTUS_Julian/;
+currentFile = matlab.desktop.editor.getActiveFilename;
+rootpath = fileparts(currentFile);
+cd rootpath; % repos/PRESTUS_forked/
 
 % add paths
 addpath('functions')
@@ -14,14 +15,13 @@ subject_id = 5;
 
 % adjust as needed
 transducer_labels   = {'L',         'R'};
-ID_parts            = {'L+y-z--l-z',    'R+y-z--l-z'};
-% focal_distances_mm  = [63.7943      97.935]; % TODO automatic readout from get_transducer_pos
+ID_parts            = {'L+z--l+z',      'R+z--l+z'}; % TODO set label automatically
 contralateral       = [false,        true];
 dirs                = {'l',         'r'}; % i.e. target side
 sham                = [false        false]; % CAREFUL!!!!!! TODO just one; and add to ID!
-angles              = [0.2 -1 0;    0.2 1 0]; % careful: x and y swapped here!! TODO!
-transd_pos_shift    = [0 0 -3;       0 0 -3];
-focus_pos_shift     = [0 0 -3;       0 0 -3];
+angles              = [0 -1 0;    0 1 0]; % careful: x and y swapped here!! TODO!
+transd_pos_shift    = [0 0 2;       0 0 2];
+focus_pos_shift     = [0 0 2;       0 0 2];
 
 % base config ("hard" params)
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
@@ -30,16 +30,31 @@ parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
 %%
 
-ID = ['_' strjoin(ID_parts, '_') '_']; % TODO make sham a variable!
+ID = ['_' strjoin(ID_parts, '_') '']; % TODO make sham a variable!
 parameters.results_filename_affix = ID; % TODO this line needed? but also not dangerous
+
+% TODO enable one transducer or more than two transducers
+% if numel(transducer_labels)
 
 for i = 1:numel(parameters.transducers)
 
     parameters.transducers(i).name = transducer_labels{i};
     [parameters, distance] = get_transducer_pos(parameters, subject_id, dirs{i}, i, angles(i,:), transd_pos_shift(i,:), focus_pos_shift(i,:), contralateral(i));
     parameters = calculate_transducer_phases(parameters, i, distance, 15, 100, sham(i));
+
+    % TODO debug delete
+    % TODO note!! distance maximized with +30 and -10 for contra- and
+    % ipsilateral, respectively
+    if contralateral(i)
+        parameters = calculate_transducer_phases(parameters, i, distance, 40, 100, sham(i)); % distance + 30
+    elseif ~contralateral(i)
+        parameters = calculate_transducer_phases(parameters, i, distance, 15, 100, sham(i));
+    end
+
     % parameters = calculate_transducer_phases(parameters, i, focal_distances_mm(i), 15, 100, sham(i));
 
+    parameters = get_simulated_axial_intensity(parameters);
+    
     % store the indended parameters for later debugging:
     parameters.transducers(i).optim_params = [];
     % parameters.transducers(i).optim_params.focal_distance_mm = focal_distances_mm(i);
@@ -50,14 +65,39 @@ for i = 1:numel(parameters.transducers)
 
 end
 
+% adjust the source_amp of contralateral-focused transducer such that
+% intensity peaks match
+% TODO handle cases of more than 2 transducers
+peaks_list1 = findpeaks(parameters.transducers(1).axial_intensity_sim_FW); 
+peak1 = peaks_list1(end); % max(parameters.transducers(1).axial_intensity_sim_FW);
+peaks_list2 = findpeaks(parameters.transducers(2).axial_intensity_sim_FW); 
+peak2 = peaks_list2(end); % max(parameters.transducers(2).axial_intensity_sim_FW);
+source_amp1 = parameters.transducers(1).source_amp;
+source_amp2 = parameters.transducers(2).source_amp;
+
+if peak1 > peak2
+    parameters.transducers(2).source_amp = parameters.transducers(2).source_amp * sqrt(peak1/peak2);
+else
+    parameters.transducers(1).source_amp = parameters.transducers(1).source_amp * sqrt(peak2/peak1);
+end
+% TODO handle case of exactly equal peaks
+
+parameters = get_simulated_axial_intensity(parameters);
+
+% figure; hold on;
+% plot(parameters.transducers(1).axial_position, parameters.transducers(1).axial_intensity_sim_FW, 'LineWidth', 2.5);
+% plot(parameters.transducers(2).axial_position, parameters.transducers(2).axial_intensity_sim_FW, 'LineWidth', 2.5);
+% legend(parameters.transducers(1).name, parameters.transducers(2).name);
+
+% plot_transducer_pos(parameters, subject_id, true, false);
 % last parameter: where to add position noise ('none' means perfect
 % positioning)
 update_transducers_and_run(subject_id, parameters, ID, 'none');
-update_transducers_and_run(subject_id, parameters, [ID 'var1'], 'transducer');
+% update_transducers_and_run(subject_id, parameters, [ID 'var1'], 'transducer');
 % update_transducers_and_run(subject_id, parameters, [ID 'var2'], 'transducer');
-update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
+% update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
 % update_transducers_and_run(subject_id, parameters, [ID 'var4'], 'focus');
-update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
+% update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
 % update_transducers_and_run(subject_id, parameters, [ID 'var6'], 'both');
 
 

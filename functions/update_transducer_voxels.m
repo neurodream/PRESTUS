@@ -1,8 +1,8 @@
-function [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims)
+function [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims, color)
     
     % make a grid of transducer
     
-    add_transducer_shape(trans_pos, target, 'Parameters', parameters, 'TargetType', 'none');
+    add_transducer_shape(trans_pos, target, 'Parameters', parameters, 'TargetType', 'none', 'Color', color);
     
     % get the faces and vertices for use in voxelization script
     bowl2case = findobj('Type', 'Patch', 'Tag', 'transducerPatch');

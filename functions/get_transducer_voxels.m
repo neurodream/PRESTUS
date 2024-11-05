@@ -11,7 +11,7 @@ function [transducer_voxels, trans_pos, distance_mm] = get_transducer_voxels(tar
     distance = round(max(grid_dims)/2);
 
     trans_pos = target + direction * distance;
-    [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims);
+    [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims, 'black');
     overlap = matter & transducer_voxels;
     collision = any(overlap(:));
 
@@ -26,7 +26,7 @@ function [transducer_voxels, trans_pos, distance_mm] = get_transducer_voxels(tar
         distance = distance - 1; % move closer
 
         trans_pos = target + direction * distance;
-        [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims);
+        [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims, 'black');
         overlap = matter & transducer_voxels;
         collision = any(overlap(:));
 
@@ -35,7 +35,7 @@ function [transducer_voxels, trans_pos, distance_mm] = get_transducer_voxels(tar
     distance = distance + 1; % since collision detected: move away again
     
     trans_pos = target + direction * distance;
-    [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims);
+    [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims, 'black');
 
     % plot
     line = plot3([target(1), trans_pos(1)], [target(2), trans_pos(2)], [target(3), trans_pos(3)], 'k-', 'LineWidth', 2);

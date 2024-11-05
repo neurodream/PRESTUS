@@ -1,7 +1,7 @@
 function [transducer_voxels] = get_transducer_voxels_absolute_pos(target, trans_pos, matter, parameters, patch_name, transducer_color)
 
     grid_dims = size(matter);
-    [transducer_voxels] = update_transducer_voxels(trans_pos, target, parameters, grid_dims);
+    transducer_voxels = update_transducer_voxels(trans_pos, target, parameters, grid_dims, transducer_color);
     overlap = matter & transducer_voxels;
     collision = any(overlap(:));
 
@@ -10,15 +10,24 @@ function [transducer_voxels] = get_transducer_voxels_absolute_pos(target, trans_
     end
 
     % plot
-    line = plot3([target(1), trans_pos(1)], [target(2), trans_pos(2)], [target(3), trans_pos(3)], 'b-', 'LineWidth', 2);
+    line = plot3( ...
+        [target(1), trans_pos(1)], [target(2), trans_pos(2)], [target(3), trans_pos(3)], ...
+        'Color', transducer_color, 'LineWidth', 2); %
+    
     line.Tag = patch_name;
+    add_transducer_shape(trans_pos, target, 'Parameters', parameters, 'TargetType', 'none', 'PatchName', patch_name, 'Color', transducer_color);
+    
+    % graphicsArray = findobj('Tag', patch_name);
+    % for i = 1:numel(graphicsArray)
+    %     set(graphicsArray(i), 'Color', transducer_color); % Set to red (adjust color as needed)
+    % end
 
-    p_trans = patch(isosurface(transducer_voxels, 0.5)); % Extract and plot outer layer
-    set(p_trans, 'FaceAlpha', 0.5, 'FaceColor', transducer_color, 'EdgeColor', 'none'); % Customize appearance
-    isonormals(transducer_voxels, p_trans); % Add normals for proper lighting
-    p_trans.Tag = patch_name;
+    % p_trans = patch(isosurface(transducer_voxels, 0.5)); % Extract and plot outer layer
+    % set(p_trans, 'FaceAlpha', 0.5, 'FaceColor', transducer_color, 'EdgeColor', 'none'); % Customize appearance
+    % isonormals(transducer_voxels, p_trans); % Add normals for proper lighting
+    % p_trans.Tag = patch_name;
 
-    % compute length of line
+    %% compute length of line
     p1 = target;
     p2 = trans_pos;
     transformMatrix = parameters.transform;

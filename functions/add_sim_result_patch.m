@@ -1,4 +1,4 @@
-function data = add_sim_result_patch(data_folder, varargin)
+function data = add_sim_result_patch(parameters, sbj_ID, varargin)
 
     % TODO consider a clustering approach (DBSCAN?), and option to remove the near
     % field
@@ -10,9 +10,8 @@ function data = add_sim_result_patch(data_folder, varargin)
     
     % Add parameters with default values
     % addRequired(p, 'data_folder', @ischar);
-    addParameter(p, 'Color', 'cyan', @(x) ischar(x) || (isnumeric(x) && numel(x) == 3));
+    addParameter(p, 'Color', '#7E2F8E', @(x) ischar(x) || (isnumeric(x) && numel(x) == 3));
     addParameter(p, 'CutoffPerc', 0.999, @isnumeric);
-    addParameter(p, 'AddTransducer', false, @islogical);
     addParameter(p, 'PatchName', 'simPatch', @ischar);
     addParameter(p, 'HeadData', [], @isnumeric); % if provided, then limit to brain
     
@@ -20,55 +19,19 @@ function data = add_sim_result_patch(data_folder, varargin)
     parse(p, varargin{:});
     
     % Retrieve values
-    % data_folder     = p.Results.data_folder;
     color           = p.Results.Color;
     cutoff_perc     = p.Results.CutoffPerc;
-    add_transducer  = p.Results.AddTransducer;
     patch_name      = p.Results.PatchName;
     head_data       = p.Results.HeadData;
+
+    % sbj_ID = parameters.subject_subfolder;
+    data_folder = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
+    data_file = fullfile(data_folder, sprintf('sub-%03d_final_intensity%s.nii.gz', sbj_ID, parameters.results_filename_affix));
+    data = niftiread(data_file);
+
+    % fileInfo = dir(fullfile('M:\Documents\repos\PRESTUS_forked\data\sims', data_folder, '*final_isppa_orig_coord.nii.gz'));
     
-    % fileInfo = dir(fullfile('D:\', data_folder, '*final_isppa_orig_coord.nii.gz'));
-    fileInfo = dir(fullfile('M:\Documents\repos\PRESTUS_forked\data\sims', data_folder, '*final_isppa_orig_coord.nii.gz'));
-    % fileInfo = dir(fullfile('M:\Documents\repos\PRESTUS_forked\data\sims\CTX500-024-010_77.0mm', data_folder, '*final_isppa_orig_coord.nii.gz')); 
-    
-    if numel(fileInfo) == 0
-        disp('WARNING: could not find a nifti file with isppa values, generating them from pressure values now;')
-        disp('- note that missing file likely means that simulation pipeline aborted early, likely meaning erroneous data -')
-        disp('(expected load time of around 30 seconds')
-        disp('loading data...')
-        fileInfo = dir(fullfile('D:\', data_folder, '*_layered_results.mat'));
-        load(fullfile(fileInfo.folder, fileInfo.name));
-        disp('... loading data done.')
-        p_max_CPU = gather(sensor_data.p_max_all);
-
-        data = p_max_CPU.^2./(2*(kwave_medium.sound_speed.*kwave_medium.density)).*1e-4;
-
-        % TODO seems like there is some transformation missing; check the
-        % output var inv_final_transformation_matrix from running function
-        % preprocess_brain
-        % because the patch looks out of the brain (weird because it should
-        % already exclude outside-brain voxels) - needs another sanity
-        % check?
-        sbj_id_tokens = regexp(data_folder, 'sbj_(\d+)', 'tokens');
-        subject_id = str2num(sbj_id_tokens{1}{1});
-        parameters.data_path = 'M:\Documents\repos\PRESTUS_forked\..\..\scans';
-        [~, ~, ~, ~, ~, t1_image_orig, ~, ~, inv_final_transformation_matrix] = preprocess_brain(parameters, subject_id, false);
-
-        data = tformarray(data, inv_final_transformation_matrix, ...
-                                            makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], size(t1_image_orig), [], 0) ;
-
-        % delete unneeded vars from workspace again
-        clear p_max_CPU source sensor sensor_data parameters kwave_medium kwave_input_args kgrid
-
-    else
-        data = niftiread(fullfile(fileInfo.folder, fileInfo.name));
-    end
-
-    % obtain target and transducer pos from folder label
-    targetStr   = regexp(data_folder, 'targ_(\d+)-(\d+)-(\d+)', 'tokens');
-    target = str2double(targetStr{1});
-    posStr      = regexp(data_folder, 'tpos_(\d+)-(\d+)-(\d+)', 'tokens');
-    pos = str2double(posStr{1});
+    % data = niftiread(fullfile(fileInfo.folder, fileInfo.name));
     
     if numel(head_data) > 0
         % get the brain (assuming "head" exists globally)
@@ -120,20 +83,13 @@ function data = add_sim_result_patch(data_folder, varargin)
     % disp('free water intensity: ');
     % disp(['  ' num2str(get_intensity_from_source_amp(pressure)) ' W/cm^2']);
 
+
     disp('max Isppa: ');
     disp(['  ' num2str(data(x_max, y_max, z_max)) ' W/cm^2']);
 
-    disp('Focus depth: (TODO check unit - likely needs scaling by voxel size)')
-    disp(['  ' num2str(norm(pos - target)) ' mm (?)']);
+    % TODO not possible with 2 transducers
+    % disp('Focus depth: (TODO check unit - likely needs scaling by voxel size)')
+    % disp(['  ' num2str(norm(pos - target)) ' mm (?)']);
 
-    if add_transducer
-
-        add_transducer_shape(...
-            pos([2 1 3]), target([2 1 3]), ...
-            'Shrink', false, ...
-            'NoCasing', true, ...
-            'TargetType', 'line', ...
-            'PatchName', patch_name);
-    end
 
 end

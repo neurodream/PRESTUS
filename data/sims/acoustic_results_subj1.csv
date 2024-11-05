@@ -1,0 +1,3 @@
+Row,sub_id,skin,skull,brain,brain_inner,targetL,targetR,ROItarget_L_max,ROItarget_R_max,ROItarget_L_avg,ROItarget_R_avg
+intensity__L+z--r+z_R+z--r+z,1,16.28937,9.218982,10.44942,10.44942,5.227914,4.502296,8.898338,10.44942,3.68071,4.388666
+intensity__L+z--l+z_R+z--l+z,1,14.15246,7.649818,11.98485,11.98485,7.426672,2.879171,11.98485,6.952676,4.285328,3.309752

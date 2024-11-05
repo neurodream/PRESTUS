@@ -1,37 +1,18 @@
-function [parameters] = plot_transducer_pos(parameters, sbj_ID)
+function plot_transducer_pos(parameters, sbj_ID, plot_scalp, plot_skull, plot_intensity, save)
 
-% big TODO!!
-
-% overwrites the respective parameters fields
-
-% temporarily add a transducer field so old PRESTUS functions can be used
-parameters.transducer = parameters.transducers(transd_ind);
+close all; clc;
 
 % Read the data from the Excel file
-data = readtable('data/transducer_pos/position_LUT.xlsx');
-
-% Find the row with the specified sbj_ID
-row_idx = find(data.sbj_ID == sbj_ID);
-
-% Extract the respective coordinates
-if strcmp(side, 'l')
-    target = [data.x_l(row_idx), data.y_l(row_idx), data.z_l(row_idx)];
-elseif strcmp(side, 'r')
-    target = [data.x_r(row_idx), data.y_r(row_idx), data.z_r(row_idx)];
-else
-    error('Invalid side specified. Use ''l'' for left or ''r'' for right.');
-end
-
-defacto_target = target + target_pos_add;
-defacto_target = defacto_target([2 1 3]); % flip to plotting space
-
-%%
+T = readtable('data/transducer_pos/position_LUT.xlsx');
+target_L = [T.y_l(T.sbj_ID == sbj_ID) T.x_l(T.sbj_ID == sbj_ID) T.z_l(T.sbj_ID == sbj_ID)];
+target_R = [T.y_r(T.sbj_ID == sbj_ID) T.x_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
 
 % make sure the subject ID match of seg_file and target:
-seg_file = ['/home/sleep/nicade/Documents/scans/segmentation_results/m2m_sub-' sprintf('%03d', sbj_ID) '/final_tissues.nii.gz'];
+segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
+filename_segmented = fullfile(segmentation_folder, 'final_tissues.nii.gz');
 
-layers = niftiread(seg_file);
-layers_info = niftiinfo(seg_file);
+layers = niftiread(filename_segmented);
+layers_info = niftiinfo(filename_segmented);
 head = layers > 0;
 
 head = fill_head(head);
@@ -42,22 +23,75 @@ transformMatrix = layers_info.Transform.T;
 parameters.transform = transformMatrix;
 parameters.grid_step_mm = mean([transformMatrix(1,1) transformMatrix(2,2) transformMatrix(3,3)]); % TODO check in Julian's code if valid
 
-%% add transducer
+%% create figure with head/skull and targets
 
-% remove a transducer by calling: delete(findobj('Tag', transducer_name));
+figure;
+if plot_scalp
+    head_smooth = smooth3(head, 'box', 5);
+    p = patch(isosurface(head_smooth, 0.5)); % Extract and plot outer layer
+    set(p, 'FaceAlpha', 0.5, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
+    isonormals(head_smooth, p); % Add normals for proper lighting
+end
 
-[~, trans_pos] = get_transducer_voxels(defacto_target, transd_angle, head, parameters, 'transd1', '#0072BD');
+hold on;
 
-trans_pos = trans_pos([2 1 3]); % flip back to normal space
-trans_pos = trans_pos + transd_pos_add;
+if plot_skull
+    skull_smooth = smooth3(skull, 'box', 5);
+    p_skull = patch(isosurface(skull_smooth, 0.5)); % Extract and plot outer layer
+    set(p_skull, 'FaceAlpha', 0.5, 'FaceColor', 'black', 'EdgeColor', 'none'); % Customize appearance
+    isonormals(skull_smooth, p_skull); % Add normals for proper lighting
+end
 
-parameters.transducers(transd_ind).pos_t1_grid = trans_pos;
-parameters.transducers(transd_ind).focus_pos_t1_grid = defacto_target([2 1 3]);  % flip back to normal space
+plot3(target_L(1), target_L(2), target_L(3), 'k.', 'MarkerSize', 20); % red point at the target
+plot3(target_R(1), target_R(2), target_R(3), 'k.', 'MarkerSize', 20); % green point at the left NBM
 
-parameters = rmfield(parameters, 'transducer');
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+grid on;
+axis equal;
+view(3);
+camlight('left');      % Light from the left side
+camlight('right');     % Light from the right side
+camlight('headlight'); % does not seem to work...
+lighting gouraud;
 
-% TODO careful: assuming no other figures/important command window
-% information is open
-clc; close all;
+for transducer = parameters.transducers
+    
+    % % plot beam path from left and right transducer, respectively
+    % plot3([source_L(1), defacto_target_R(1)], [source_L(2), defacto_target_R(2)], [source_L(3), defacto_target_R(3)], 'k-', 'LineWidth', 1);
+    % plot3([source_R(1), defacto_target_L(1)], [source_R(2), defacto_target_L(2)], [source_R(3), defacto_target_L(3)], 'k-', 'LineWidth', 1);
+    
+    %% add transducer
+    
+    % temporarily add transducer as field to parameters, to make old
+    % function work
+    parameters.transducer = transducer;
 
+    % remove a transducer by calling: delete(findobj('Tag', transducer_name));
+    
+    target = transducer.focus_pos_t1_grid;
+    pos = transducer.pos_t1_grid;
+    
+    if strcmp(transducer.name, 'L')
+        color = '#0072BD';
+    elseif strcmp(transducer.name, 'R')
+        color = '#A2142F';
+    else
+        color = 'k';
+    end
+    get_transducer_voxels_absolute_pos(target([2 1 3]), pos([2 1 3]), head, parameters, transducer.name, color);
+
+end
+
+if plot_intensity
+    add_sim_result_patch(parameters, sbj_ID, 'HeadData', layers);
+end
+
+view(62, 36);
+
+if save
+    data_folder = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
+    figure_file = fullfile(data_folder, sprintf('sub-%03d_3Dplot%s.fig', sbj_ID, parameters.results_filename_affix));
+    savefig(figure_file);
 end

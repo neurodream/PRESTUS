@@ -298,13 +298,32 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     
     % Run the acoustic simulations
     % See 'run_simulations' for more documentation
+    % TODO note that changed; make it a parameter whether mat file should
+    % be stored or not
     if parameters.run_acoustic_sims && confirm_overwriting(filename_sensor_data, parameters) && (parameters.interactive == 0 || confirmation_dlg('Running the simulations will take a long time, are you sure?', 'Yes', 'No'))
         sensor_data = run_simulations(kgrid, kwave_medium, source, sensor, kwave_input_args, parameters);
-        save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 'inv_final_transformation_matrix', 't1_header', '-v7.3')
+        % save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 'inv_final_transformation_matrix', 't1_header', '-v7.3')
     else
         disp('Skipping, the file already exists, loading it instead.')
         load(filename_sensor_data, 'sensor_data')
     end
+    
+    % save the nifti files (TODO: make parameter what should be stored)
+    
+    fname_out_isppa = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'intensity', parameters.results_filename_affix));
+
+    p = gather(sensor_data.p_max_all);
+    Isppa_map = p.^2 ./ (2 * (kwave_medium.sound_speed .* kwave_medium.density)) * 1e-4;
+    % MI_map = (p/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6)); % TODO assumes that source frequency is the same for all transducers
+    
+    % backtransform the data
+    data_isppa = tformarray(Isppa_map, inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
+    % data_p     = tformarray(p,         inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
+    % data_mi    = tformarray(MI_map,    inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
+    
+    t1_header.Datatype = 'single';
+    niftiwrite(data_isppa, fname_out_isppa, t1_header, 'Compressed', true);
+    % niftiwrite(data_p,     fullfile(filepath, fname_out_p),     t1_header, 'Compressed', true);
 
     %% Process results
     % disp('Processing the results of acoustic simulations...')
@@ -534,6 +553,9 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     end
 
     %% Plots the data on the original T1 image and in MNI space
+    
+    % TODO why commented out?
+
     % if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
     %     % TODO implement handling of 2 transducers
     %     % backtransf_coordinates = round(tformfwd([trans_pos_final(1,:);  focus_pos_final; highlighted_pos], inv_final_transformation_matrix));
@@ -638,6 +660,9 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     % end
     
     %% Runs posthoc water simulations
+
+    % TODO why commented out?
+
     % % To check sonication parameters of the transducer in free water
     % if isfield(parameters, 'run_posthoc_water_sims') && parameters.run_posthoc_water_sims && ...
     %         (contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered'))
