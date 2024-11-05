@@ -13,7 +13,7 @@ prefix_unilateral_l = '_L+z--l+z_R+z--l+z';
 % cd to PRESTUS path
 currentFile = matlab.desktop.editor.getActiveFilename;
 rootpath = fileparts(fileparts(currentFile));
-cd rootpath; % repos/PRESTUS_forked/
+cd(rootpath); % repos/PRESTUS_forked/
 
 addpath('functions');
 

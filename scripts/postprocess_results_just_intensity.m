@@ -13,7 +13,7 @@ prefix_unilateral_l = '_L--l_R--l_test_parallel_no_controlling_undershoot';
 % cd to PRESTUS path
 currentFile = matlab.desktop.editor.getActiveFilename;
 rootpath = fileparts(fileparts(currentFile));
-cd rootpath; % repos/PRESTUS_forked/
+cd(rootpath); % repos/PRESTUS_forked/
 
 addpath('functions');
 

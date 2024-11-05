@@ -1,0 +1,28 @@
+----------------------------------------
+Start task prologue Tue Nov  5 10:42:22 CET 2024
+----------------------------------------
+Step ID:         46297087.0
+Username:        nicade
+Group:           sleep
+Asked resources: walltime=2:00:00,nodes=1,cpus=1,mem=2G
+Queue:           gpu
+Compute nodes:   dccn-c080
+----------------------------------------
+End task prologue Tue Nov  5 10:42:22 CET 2024
+----------------------------------------
+Starting matlab/R2024a
+Executing /opt/matlab/R2024a/bin/matlab -nodisplay -nosplash -batch store_simulated_profiles_grid(parameters, '/home/sleep/nicade/Documents/repos/PRESTUS_forked/data', 'simulation_grid', [70 75 80 85 90 95 100 105], [5 10 15 20 25 30 35]); exit;
+----------------------------------------
+Start job epilogue Tue Nov  5 10:42:23 CET 2024
+----------------------------------------
+Job ID:          46297087
+Job Exit Code:   2:0
+Username:        nicade
+Group:           sleep
+Queue:           gpu
+Compute nodes:   dccn-c080
+Asked resources: walltime=2:00:00,nodes=1,cpus=1,mem=2G
+Used resources:  cputime=00:00:01,walltime=00:00:01,memory=0
+----------------------------------------
+End job epilogue Tue Nov  5 10:42:23 CET 2024
+----------------------------------------

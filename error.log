@@ -1,0 +1,2 @@
+/opt/matlab/R2024a/bin/matlab: eval: line 1780: syntax error near unexpected token `)'
+/opt/matlab/R2024a/bin/matlab: eval: line 1780: `exec "/opt/matlab/R2024a/bin/glnxa64/MATLAB"  -nodisplay -nosplash -batch 'store_simulated_profiles_grid(parameters,' '/home/sleep/nicade/Documents/repos/PRESTUS_forked/data', 'simulation_grid', [70 75 80 85 90 95 100 105], [5 10 15 20 25 30 35]); exit;'

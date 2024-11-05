@@ -2,7 +2,7 @@ close all; clear; clc;
 
 currentFile = matlab.desktop.editor.getActiveFilename;
 rootpath = fileparts(fileparts(currentFile));
-cd rootpath; % repos/PRESTUS_forked/
+cd(rootpath); % repos/PRESTUS_forked/
 
 addpath('functions');
 addpath(genpath('toolboxes'));

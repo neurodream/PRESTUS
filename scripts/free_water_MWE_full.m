@@ -323,7 +323,7 @@ parameters.transducer.source_freq_hz = source_freq_hz;
 parameters.medium.water.sound_speed = sound_speed;
 parameters.medium.water.density = density;
 
-cd rootpath;
+cd(rootpath);
 % load('scripts/tests/parameter_comparison_MWE.mat');
 % load('scripts/tests/parameter_comparison_MWE_2.mat');
 % parameters = param_cmp.parameters;

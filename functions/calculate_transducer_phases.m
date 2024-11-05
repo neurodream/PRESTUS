@@ -22,12 +22,13 @@ opt_limits = [axial_position(2,1), axial_position(end,1)];
 %     axial_position(flhm_center_index,1)/.5 ...
 %     );
 
-% TODO: note: y_min was 0 before, not goal_intensity/4
-if expected_focal_distance_mm > 75
-    ymin = 0;%goal_intensity/4;
-else
-    ymin = 0;
-end
+% % TODO: note: y_min was 0 before, not goal_intensity/4
+% if expected_focal_distance_mm > 75
+%     ymin = 0;%goal_intensity/4;
+% else
+%     ymin = 0;
+% end
+ymin = 0;
 
 desired_function = create_boxcar(expected_focal_distance_mm, ROI_width_mm, axial_position, ymin, goal_intensity);
 

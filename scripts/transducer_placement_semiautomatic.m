@@ -10,7 +10,7 @@ angle_R = [0.2  1 0];
 
 currentFile = matlab.desktop.editor.getActiveFilename;
 rootpath = fileparts(fileparts(currentFile));
-cd rootpath;
+cd(rootpath);
 
 addpath('functions')
 addpath(genpath('toolboxes'))
