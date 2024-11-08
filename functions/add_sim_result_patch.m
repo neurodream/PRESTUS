@@ -60,20 +60,52 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
     max_pos = [x_max, y_max, z_max];
     disp(max_pos)
     % add cross
-    add_3d_cross(max_pos([2 1 3]), 15);
+    add_3d_cross(max_pos([2 1 3]), 50, 'black', 3);
 
+    % 
     % Flatten the 3D matrix
     flattened_data = data(:);
-    
     % Sort the flattened values
     sorted_data = sort(flattened_data);
-    
+    % based on this, compute cutoff
     cutoff = sorted_data(floor(cutoff_perc*numel(sorted_data)));
     
-    Ds_sim = smooth3(double(data > cutoff));
-    sim_isosurface = isosurface(Ds_sim,0.5);
-    sim_patch = patch(sim_isosurface,'FaceColor',color,'EdgeColor','none','facealpha',0.3);
-    sim_patch.Tag = patch_name;
+    thresholds = [0.1 0.2 0.4 0.8 1.6 3.2 6.4 12.8 1000] + 4;
+
+    colors = {
+        '#FFFF00'  % Yellow
+        '#FFD700'  % Golden Yellow
+        '#FFA500'  % Orange
+        '#FF8C00'  % Dark Orange
+        '#FF4500'  % Orange-Red
+        '#FF0000'  % Red
+        '#FF6347'  % Tomato
+        '#FFFFFF'  % White
+    };
+    % colors = {
+    %     '#4B0000'  % Very Dark Red
+    %     '#800000'  % Dark Red
+    %     '#B22222'  % Firebrick
+    %     '#FF4500'  % Orange-Red
+    %     '#FF6347'  % Tomato
+    %     '#FF8C00'  % Dark Orange
+    %     '#FFA500'  % Orange
+    %     '#FFFFFF'  % White
+    % };
+    alphas = linspace(0.1, 0.1, 8);
+    % for threshold_i = 1:numel(thresholds) - 1
+    %     lower_threshold = thresholds(threshold_i);
+    %     upper_threshold = thresholds(threshold_i + 1);
+        Ds_sim = smooth3(double(data > cutoff)); %  & data < upper_threshold
+        sim_isosurface = isosurface(Ds_sim,0.5);
+        color_values = interp3(data, sim_isosurface.vertices(:,1), sim_isosurface.vertices(:,2), sim_isosurface.vertices(:,3));
+        sim_patch = patch(sim_isosurface,'FaceColor','interp','FaceVertexCData', color_values, 'EdgeColor','none', 'facealpha',0.5);
+        sim_patch.Tag = patch_name;
+    % end
+    colormap hot; % set desired colormap
+    ax = gca; % get current axis
+    ax.CLim = [0.5*cutoff, 0.75*max(data(:))];
+    colorbar;
     
     % print diagnostic info to console
 

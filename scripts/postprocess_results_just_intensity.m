@@ -5,10 +5,12 @@
 close all; clear; clc;
 
 % set parameters:
-sub_id = 6;
-% prefix_bilateral    = '_L+y-z--l-z_R+y-z--r-z_';
-prefix_unilateral_r = '_L--r_R--r_test_parallel_no_controlling_undershoot';
-prefix_unilateral_l = '_L--l_R--l_test_parallel_no_controlling_undershoot';
+sub_id = 1;
+prefix_bilateral    = 'L+y-z--l-z_R+y-z--r-z_';
+prefix_unilateral_r = 'L+z--r_R+z--r_all_phases';
+prefix_unilateral_l = 'L+z--l_R+z--l_all_phases';
+% prefix_unilateral_r = 'L--r_R--r_all_phases';
+% prefix_unilateral_l = 'L--l_R--l_all_phases';
 
 % cd to PRESTUS path
 currentFile = matlab.desktop.editor.getActiveFilename;
@@ -16,6 +18,9 @@ rootpath = fileparts(fileparts(currentFile));
 cd(rootpath); % repos/PRESTUS_forked/
 
 addpath('functions');
+
+% base config ("hard" params)
+parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
 nifti_path = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sub_id), 'final_tissues.nii.gz');
 
@@ -51,6 +56,7 @@ ROItarget_R = (x - targetR(1)).^2 + (y - targetR(2)).^2 + (z - targetR(3)).^2 <=
 %% load in the results and readout
 
 filename = sprintf('acoustic_results_subj%d.csv', sub_id);
+% filename = 'quick_test.csv';
 
 % List of IDs to loop over
 IDs = {
@@ -75,7 +81,7 @@ for id_idx = 1:numel(IDs)
     ID = IDs{id_idx};  % Current ID
 
     % [isppa, p, mi] = acoustic_mat_to_nifti(sub_id, ID, fullfile(parameters.seg_path, sprintf('sub-%03d', sub_id)), true);
-    isppa = niftiread(fullfile(parameters.seg_path, sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_intensity%s.nii.gz', sub_id, ID)));
+    isppa = niftiread(fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_intensity%s.nii.gz', sub_id, ID)));
     % p = p/1e6; % in megapascal
     i = isppa;
     

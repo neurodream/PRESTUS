@@ -13,7 +13,7 @@ addpath(genpath('toolboxes'))
 % base config ("hard" params)
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
-expected_focal_distances_mm = [70,75,80,85,90,95,100,105];
+expected_focal_distances_mm = [30,40,50,60,70,80,90,100];
 ROI_widths_mm = [5 10 15 20 25 30 35];
 
 % Define SLURM job parameters
@@ -21,7 +21,7 @@ job_name = 'simulation_job';
 output_file = '/home/sleep/nicade/Documents/scans/sim_outputs/output.log';
 error_file = '/home/sleep/nicade/Documents/scans/sim_outputs/error.log';
 partition = 'gpu';
-time = '00:05:00';
+time = '00:20:00';
 cpus_per_task = 1;
 memory = '2G';
 num_gpus = 1; % Number of GPUs requested
@@ -53,7 +53,7 @@ save('parameters.mat', 'parameters');
 matlab_command = ['matlab -nodisplay -nosplash -batch "addpath(''functions'');addpath(genpath(''toolboxes''));store_simulated_profiles_grid(''' parameters_fname ''',''' filepath ''',''' filename ''',' depths_arg ',' widths_arg ');exit;"'];
 disp(matlab_command);
 
-% store_simulated_profiles_grid(parameters_fname, filepath, filename, expected_focal_distances_mm, ROI_widths_mm);
+store_simulated_profiles_grid(parameters_fname, filepath, 'line1', expected_focal_distances_mm, ROI_widths_mm);
 
 fprintf(fid, '%s\n', matlab_command);
 
@@ -61,7 +61,7 @@ fprintf(fid, '%s\n', matlab_command);
 fclose(fid);
 
 % Submit the job to SLURM
-system(['sbatch ' slurm_script]);
+% system(['sbatch ' slurm_script]);
 
 % Optional: Clean up the temporary SLURM script
 delete(slurm_script);

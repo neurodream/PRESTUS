@@ -1,4 +1,4 @@
-function add_3d_cross(center, length, color)
+function add_3d_cross(center, length, color, linewidth)
     % add_3d_cross(center, length, color)
     % center: [x, y, z] coordinates of the center of the cross
     % length: Length of each arm of the cross
@@ -20,9 +20,9 @@ function add_3d_cross(center, length, color)
 
     % Plot the cross
     hold on;
-    l1 = plot3([x0 x0], [y0 y0], [z(1) z(2)], color, 'LineWidth', 2); % z-axis line
-    l2 = plot3([x(1) x(2)], [y0 y0], [z0 z0], color, 'LineWidth', 2); % x-axis line
-    l3 = plot3([x0 x0], [y(1) y(2)], [z0 z0], color, 'LineWidth', 2); % y-axis line
+    l1 = plot3([x0 x0], [y0 y0], [z(1) z(2)], color, 'LineWidth', linewidth); % z-axis line
+    l2 = plot3([x(1) x(2)], [y0 y0], [z0 z0], color, 'LineWidth', linewidth); % x-axis line
+    l3 = plot3([x0 x0], [y(1) y(2)], [z0 z0], color, 'LineWidth', linewidth); % y-axis line
     set(l1, 'Tag', 'cross'); % Tag for the first line
     set(l2, 'Tag', 'cross'); % Tag for the first line
     set(l3, 'Tag', 'cross'); % Tag for the first line

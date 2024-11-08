@@ -8,6 +8,8 @@ target_L = [T.y_l(T.sbj_ID == sbj_ID) T.x_l(T.sbj_ID == sbj_ID) T.z_l(T.sbj_ID =
 target_R = [T.y_r(T.sbj_ID == sbj_ID) T.x_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
 
 % make sure the subject ID match of seg_file and target:
+parameters.seg_path = 'M:\Documents\scans\segmentation_results';
+parameters.data_path = 'M:\Documents\scans';
 segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
 filename_segmented = fullfile(segmentation_folder, 'final_tissues.nii.gz');
 
@@ -29,7 +31,8 @@ figure;
 if plot_scalp
     head_smooth = smooth3(head, 'box', 5);
     p = patch(isosurface(head_smooth, 0.5)); % Extract and plot outer layer
-    set(p, 'FaceAlpha', 0.5, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
+    set(p, 'FaceAlpha', 0.25, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
+    set(p, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
     isonormals(head_smooth, p); % Add normals for proper lighting
 end
 
@@ -38,12 +41,11 @@ hold on;
 if plot_skull
     skull_smooth = smooth3(skull, 'box', 5);
     p_skull = patch(isosurface(skull_smooth, 0.5)); % Extract and plot outer layer
-    set(p_skull, 'FaceAlpha', 0.5, 'FaceColor', 'black', 'EdgeColor', 'none'); % Customize appearance
+    set(p_skull, 'FaceAlpha', 0.25, 'FaceColor', 'black', 'EdgeColor', 'none'); % Customize appearance
+    set(p_skull, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
     isonormals(skull_smooth, p_skull); % Add normals for proper lighting
 end
 
-plot3(target_L(1), target_L(2), target_L(3), 'k.', 'MarkerSize', 20); % red point at the target
-plot3(target_R(1), target_R(2), target_R(3), 'k.', 'MarkerSize', 20); % green point at the left NBM
 
 xlabel('X');
 ylabel('Y');
@@ -51,10 +53,18 @@ zlabel('Z');
 grid on;
 axis equal;
 view(3);
-camlight('left');      % Light from the left side
-camlight('right');     % Light from the right side
-camlight('headlight'); % does not seem to work...
+% camlight('left');      % Light from the left side
+% camlight('right');     % Light from the right side
+light('Position', [-1, 0, 0], 'Style', 'infinite', 'Color', [1 1 1]*0.5);
+light('Position', [1, 0, 0],  'Style', 'infinite', 'Color', [1 1 1]*0.5); 
+light('Position', [0, -1, 0], 'Style', 'infinite', 'Color', [1 1 1]*0.5);
+light('Position', [0, 1, 0],  'Style', 'infinite', 'Color', [1 1 1]*0.5); 
+light('Position', [0, 0, -1], 'Style', 'infinite', 'Color', [1 1 1]*0.5);
+light('Position', [0, 0, 1],  'Style', 'infinite', 'Color', [1 1 1]*0.5); 
+% camlight('headlight'); % does not seem to work...
 lighting gouraud;
+material([0.4 0.6 0.2 20]); % Softer shininess with adjusted properties
+% material dull;
 
 for transducer = parameters.transducers
     
@@ -85,8 +95,29 @@ for transducer = parameters.transducers
 end
 
 if plot_intensity
-    add_sim_result_patch(parameters, sbj_ID, 'HeadData', layers);
+    add_sim_result_patch(parameters, sbj_ID, 'HeadData', layers, 'CutoffPerc', 0.9995); % 0.9998
 end
+
+% plot3(target_L(1), target_L(2), target_L(3), 'k.', 'MarkerSize', 20);
+% plot3(target_R(1), target_R(2), target_R(3), 'k.', 'MarkerSize', 20);
+
+% instead of just a point: plot the quantified ROI
+
+r = round(5/mean(layers_info.PixelDimensions));
+% Equation of the sphere: (x - px)^2 + (y - py)^2 + (z - pz)^2 <= r^2
+[x, y, z] = ndgrid(1:size(layers,1), 1:size(layers,2), 1:size(layers,3));
+ROItarget_L = (x - target_L(2)).^2 + (y - target_L(1)).^2 + (z - target_L(3)).^2 <= r^2;
+ROItarget_R = (x - target_R(2)).^2 + (y - target_R(1)).^2 + (z - target_R(3)).^2 <= r^2;
+
+ROItarget_L_smooth = smooth3(ROItarget_L, 'box', 5);
+p = patch(isosurface(ROItarget_L_smooth, 0.5)); % Extract and plot outer layer
+set(p, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
+isonormals(ROItarget_L_smooth, p); % Add normals for proper lighting
+
+ROItarget_R_smooth = smooth3(ROItarget_R, 'box', 5);
+p = patch(isosurface(ROItarget_R_smooth, 0.5)); % Extract and plot outer layer
+set(p, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
+isonormals(ROItarget_R_smooth, p); % Add normals for proper lighting
 
 view(62, 36);
 

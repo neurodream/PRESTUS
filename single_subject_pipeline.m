@@ -311,86 +311,90 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     % save the nifti files (TODO: make parameter what should be stored)
     
     fname_out_isppa = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'intensity', parameters.results_filename_affix));
+    fname_out_p     = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'pressure', parameters.results_filename_affix));
+    fname_out_mi    = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'mechanicalindex', parameters.results_filename_affix));
 
     p = gather(sensor_data.p_max_all);
     Isppa_map = p.^2 ./ (2 * (kwave_medium.sound_speed .* kwave_medium.density)) * 1e-4;
-    % MI_map = (p/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6)); % TODO assumes that source frequency is the same for all transducers
+    MI_map = (p/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6)); % TODO assumes that source frequency is the same for all transducers
     
     % backtransform the data
     data_isppa = tformarray(Isppa_map, inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
-    % data_p     = tformarray(p,         inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
-    % data_mi    = tformarray(MI_map,    inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
+    data_p     = tformarray(p,         inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
+    data_mi    = tformarray(MI_map,    inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
     
     t1_header.Datatype = 'single';
     niftiwrite(data_isppa, fname_out_isppa, t1_header, 'Compressed', true);
-    % niftiwrite(data_p,     fullfile(filepath, fname_out_p),     t1_header, 'Compressed', true);
+    niftiwrite(data_p,     fname_out_p,     t1_header, 'Compressed', true);
+    niftiwrite(data_mi,    fname_out_mi,     t1_header, 'Compressed', true);
+    
 
     %% Process results
-    % disp('Processing the results of acoustic simulations...')
-    % 
-    % % What is the highest pressure level for every gridpoint
-    % data_max = gather(sensor_data.p_max_all); % gather is used since it could be a GPU array
-    % max_pressure = max(data_max(:));
-    % 
-    % % Calculates the Isppa for every gridpoint
-    % Isppa_map = data_max.^2./(2*(kwave_medium.sound_speed.*kwave_medium.density)).*1e-4;
-    % % Calculates the max Isppa
-    % max_Isppa = max(Isppa_map(:));
-    % 
-    % % Calculates the Mechanical Index for every gridpoint
-    % % TODO figure out how to implement different source frequencies if
-    % % needed
-    % MI_map = (data_max/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6));
-    % 
-    % % Creates the foundation for a mask before the exit plane to calculate max values outside of it
-    % % TODO make sure the mask makes sense
-    % comp_grid_size = size(sensor_data.p_max_all);
-    % after_exit_plane_mask = ones(comp_grid_size);
-    % for transducer = parameters.transducers
-    %     after_exit_plane_mask_tr = ones(comp_grid_size);
-    %     bowl_depth_grid = round((transducer.curv_radius_mm-transducer.dist_to_plane_mm)/parameters.grid_step_mm);
-    %     % Places the exit plane mask in the grid, adjusted to the amount of dimensions
-    %     if parameters.n_sim_dims == 3
-    %         if transducer.trans_pos_final(3) > comp_grid_size(3)/2
-    %             after_exit_plane_mask_tr(:,:,(transducer.trans_pos_final(parameters.n_sim_dims)-bowl_depth_grid):end) = 0;
-    %         else
-    %             after_exit_plane_mask_tr(:,:,1:(transducer.trans_pos_final(parameters.n_sim_dims)+bowl_depth_grid)) = 0;
-    %         end
-    %     else
-    %         if transducer.trans_pos_final(2) > comp_grid_size(2)/2
-    %             after_exit_plane_mask_tr(:,(transducer.trans_pos_final(parameters.n_sim_dims)-bowl_depth_grid):end) = 0;
-    %         else
-    %             after_exit_plane_mask_tr(:,1:(transducer.trans_pos_final(parameters.n_sim_dims)+bowl_depth_grid)) = 0;
-    %         end
-    %     end
-    %     after_exit_plane_mask = double(after_exit_plane_mask & after_exit_plane_mask_tr);
-    % end
-    % 
-    % % Calculates the X, Y and Z coordinates of the max. intensity
-    % [max_Isppa_after_exit_plane, Ix_eplane, Iy_eplane, Iz_eplane] = masked_max_3d(Isppa_map, after_exit_plane_mask);
-    % 
-    % % Combines these coordinates into a point of max. intensity in the grid
-    % if parameters.n_sim_dims==3
-    %     max_isppa_eplane_pos = [Ix_eplane, Iy_eplane, Iz_eplane];
-    % else 
-    %     max_isppa_eplane_pos = [Ix_eplane, Iy_eplane];
-    % end
-    % disp('Final transducer, expected focus, and max ISPPA positions')
-    % 
-    % % Calculates the average Isppa within a circle around the target
-    % [trans_pos_final', focus_pos_final', max_isppa_eplane_pos']
-    % real_focal_distance = norm(max_isppa_eplane_pos-trans_pos_final)*parameters.grid_step_mm;
-    % distance_target_real_maximum = norm(max_isppa_eplane_pos-focus_pos_final)*parameters.grid_step_mm;
-    % avg_radius = round(parameters.focus_area_radius/parameters.grid_step_mm); %grid
-    % avg_isppa_around_target = Isppa_map(...
-    %     (focus_pos_final(1)-avg_radius):(focus_pos_final(1)+avg_radius),...
-    %     (focus_pos_final(2)-avg_radius):(focus_pos_final(2)+avg_radius),...
-    %     (focus_pos_final(3)-avg_radius):(focus_pos_final(3)+avg_radius));
-    % avg_isppa_around_target = mean(avg_isppa_around_target(:));
-    % 
-    % % Reports the Isppa within the original stimulation target
-    % isppa_at_target = Isppa_map(focus_pos_final(1),focus_pos_final(2),focus_pos_final(3));
-    % 
+    disp('Processing the results of acoustic simulations...')
+
+    % What is the highest pressure level for every gridpoint
+    data_max = gather(sensor_data.p_max_all); % gather is used since it could be a GPU array
+    max_pressure = max(data_max(:));
+
+    % Calculates the Isppa for every gridpoint
+    Isppa_map = data_max.^2./(2*(kwave_medium.sound_speed.*kwave_medium.density)).*1e-4;
+    % Calculates the max Isppa
+    max_Isppa = max(Isppa_map(:));
+
+    % Calculates the Mechanical Index for every gridpoint
+    % TODO figure out how to implement different source frequencies if
+    % needed
+    MI_map = (data_max/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6));
+
+    % Creates the foundation for a mask before the exit plane to calculate max values outside of it
+    % TODO make sure the mask makes sense
+    comp_grid_size = size(sensor_data.p_max_all);
+    after_exit_plane_mask = ones(comp_grid_size);
+    for transducer = parameters.transducers
+        after_exit_plane_mask_tr = ones(comp_grid_size);
+        bowl_depth_grid = round((transducer.curv_radius_mm-transducer.dist_to_plane_mm)/parameters.grid_step_mm);
+        % Places the exit plane mask in the grid, adjusted to the amount of dimensions
+        if parameters.n_sim_dims == 3
+            if transducer.trans_pos_final(3) > comp_grid_size(3)/2
+                after_exit_plane_mask_tr(:,:,(transducer.trans_pos_final(parameters.n_sim_dims)-bowl_depth_grid):end) = 0;
+            else
+                after_exit_plane_mask_tr(:,:,1:(transducer.trans_pos_final(parameters.n_sim_dims)+bowl_depth_grid)) = 0;
+            end
+        else
+            if transducer.trans_pos_final(2) > comp_grid_size(2)/2
+                after_exit_plane_mask_tr(:,(transducer.trans_pos_final(parameters.n_sim_dims)-bowl_depth_grid):end) = 0;
+            else
+                after_exit_plane_mask_tr(:,1:(transducer.trans_pos_final(parameters.n_sim_dims)+bowl_depth_grid)) = 0;
+            end
+        end
+        after_exit_plane_mask = double(after_exit_plane_mask & after_exit_plane_mask_tr);
+    end
+
+    % Calculates the X, Y and Z coordinates of the max. intensity
+    [max_Isppa_after_exit_plane, Ix_eplane, Iy_eplane, Iz_eplane] = masked_max_3d(Isppa_map, after_exit_plane_mask);
+
+    % Combines these coordinates into a point of max. intensity in the grid
+    if parameters.n_sim_dims==3
+        max_isppa_eplane_pos = [Ix_eplane, Iy_eplane, Iz_eplane];
+    else 
+        max_isppa_eplane_pos = [Ix_eplane, Iy_eplane];
+    end
+    disp('Final transducer, expected focus, and max ISPPA positions')
+
+    % Calculates the average Isppa within a circle around the target
+    [trans_pos_final', focus_pos_final', max_isppa_eplane_pos']
+    real_focal_distance = norm(max_isppa_eplane_pos-trans_pos_final)*parameters.grid_step_mm;
+    distance_target_real_maximum = norm(max_isppa_eplane_pos-focus_pos_final)*parameters.grid_step_mm;
+    avg_radius = round(parameters.focus_area_radius/parameters.grid_step_mm); %grid
+    avg_isppa_around_target = Isppa_map(...
+        (focus_pos_final(1)-avg_radius):(focus_pos_final(1)+avg_radius),...
+        (focus_pos_final(2)-avg_radius):(focus_pos_final(2)+avg_radius),...
+        (focus_pos_final(3)-avg_radius):(focus_pos_final(3)+avg_radius));
+    avg_isppa_around_target = mean(avg_isppa_around_target(:));
+
+    % Reports the Isppa within the original stimulation target
+    isppa_at_target = Isppa_map(focus_pos_final(1),focus_pos_final(2),focus_pos_final(3));
+
     % % Creates a logical skull mask and register skull_ids
     % labels = fieldnames(parameters.layer_labels);
     % skull_i = find(strcmp(labels, 'skull_cortical'));
@@ -401,7 +405,7 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     % brain_mask = ismember(medium_masks,brain_i);
     % skin_i = find(strcmp(labels, 'skin'));
     % skin_mask = ismember(medium_masks,skin_i);
-    % 
+
     % % Overwrites the max Isppa by dividing it up into the max Isppa for
     % % each layer in case a layered simulation_medium was selected
     % if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
@@ -429,23 +433,23 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     %     highlighted_pos = max_isppa_eplane_pos;
     %     writetable(table(subject_id, max_Isppa, max_Isppa_after_exit_plane, max_pressure, real_focal_distance, trans_pos_final(1,:), trans_pos_final(2,:), focus_pos_final(1,:), focus_pos_final(2,:), isppa_at_target, avg_isppa_around_target), output_pressure_file);
     % end
-    % 
-    % % Plots the Isppa on the segmented image
-    % 
-    % % TODO
-    % % if parameters.n_sim_dims==3
-    % %     %options.isppa_color_range = [0.5, max_Isppa_brain];
-    % %     [~,~,~,~,~,~,~,h]=plot_isppa_over_image(...
-    % %         Isppa_map, segmented_image_cropped, source_labels, parameters, ...
-    % %         {'y', focus_pos_final(2)}, trans_pos_final, focus_pos_final, highlighted_pos);
-    % % else
-    % %     [~,~,h]=plot_isppa_over_image_2d(Isppa_map, segmented_image_cropped, source_labels, parameters,  trans_pos_final, focus_pos_final, highlighted_pos);
-    % % end
-    % % output_plot = fullfile(parameters.output_dir,...
-    % %     sprintf('sub-%03d_%s_isppa%s.png', ...
-    % %     subject_id, parameters.simulation_medium, parameters.results_filename_affix));
-    % % saveas(h, output_plot, 'png')
-    % % close(h);
+
+    % Plots the Isppa on the segmented image
+
+    % TODO
+    % if parameters.n_sim_dims==3
+    %     %options.isppa_color_range = [0.5, max_Isppa_brain];
+    %     [~,~,~,~,~,~,~,h]=plot_isppa_over_image(...
+    %         Isppa_map, segmented_image_cropped, source_labels, parameters, ...
+    %         {'y', focus_pos_final(2)}, trans_pos_final, focus_pos_final, highlighted_pos);
+    % else
+    %     [~,~,h]=plot_isppa_over_image_2d(Isppa_map, segmented_image_cropped, source_labels, parameters,  trans_pos_final, focus_pos_final, highlighted_pos);
+    % end
+    % output_plot = fullfile(parameters.output_dir,...
+    %     sprintf('sub-%03d_%s_isppa%s.png', ...
+    %     subject_id, parameters.simulation_medium, parameters.results_filename_affix));
+    % saveas(h, output_plot, 'png')
+    % close(h);
 
     %% RUN HEATING SIMULATIONS
     % =========================================================================
@@ -663,19 +667,19 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
 
     % TODO why commented out?
 
-    % % To check sonication parameters of the transducer in free water
-    % if isfield(parameters, 'run_posthoc_water_sims') && parameters.run_posthoc_water_sims && ...
-    %         (contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered'))
-    %     new_parameters = parameters;
-    %     new_parameters.simulation_medium = 'water';
-    %     new_parameters.run_heating_sims = 0;
-    %     new_parameters.default_grid_dims = new_parameters.grid_dims;
-    %     % restore subject-specific path to original path if done earlier in this function
-    %     if isfield(new_parameters,'subject_subfolder') && new_parameters.subject_subfolder == 1
-    %         new_parameters.output_dir = fileparts(new_parameters.output_dir);
-    %     end
-    %     single_subject_pipeline(subject_id, new_parameters);
-    % end
+    % To check sonication parameters of the transducer in free water
+    if isfield(parameters, 'run_posthoc_water_sims') && parameters.run_posthoc_water_sims && ...
+            (contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered'))
+        new_parameters = parameters;
+        new_parameters.simulation_medium = 'water';
+        new_parameters.run_heating_sims = 0;
+        new_parameters.default_grid_dims = new_parameters.grid_dims;
+        % restore subject-specific path to original path if done earlier in this function
+        if isfield(new_parameters,'subject_subfolder') && new_parameters.subject_subfolder == 1
+            new_parameters.output_dir = fileparts(new_parameters.output_dir);
+        end
+        single_subject_pipeline(subject_id, new_parameters);
+    end
 
     disp('Pipeline finished successfully');
 end
