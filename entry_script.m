@@ -16,19 +16,24 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % how many z voxels for under/overshoot correction,
 % a string abbreviation which describes more precisely (can also be left blank: '')
 % and if errors in spatial precision are to be simulated as well (true or false)
-NBM_run(1, 'L', false, 3, 'all_phases', false);
-NBM_run(2, 'L', false, 4, 'all_phases', false);
-NBM_run(3, 'L', false, 3, 'all_phases', false);
-NBM_run(4, 'L', false, 2, 'all_phases', false);
-NBM_run(5, 'L', false, 2, 'all_phases', false);
-NBM_run(6, 'L', false, 0, 'all_phases', false);
+NBM_run(1, 'L', false, 3, 'heating_check', false);
+% NBM_run(1, 'R', false, 3, 'all_phases', false);
+% NBM_run(1, 'LR', false, 3, 'all_phases', false);
+% NBM_run(1, 'LR', true, 3, 'all_phases', false);
 
-NBM_run(1, 'R', false, 3, 'all_phases', false);
-NBM_run(2, 'R', false, 4, 'all_phases', false);
-NBM_run(3, 'R', false, 3, 'all_phases', false);
-NBM_run(4, 'R', false, 2, 'all_phases', false);
-NBM_run(5, 'R', false, 2, 'all_phases', false);
-NBM_run(6, 'R', false, 0, 'all_phases', false);
+
+% NBM_run(2, 'L', false, 4, 'all_phases', false);
+% NBM_run(3, 'L', false, 3, 'all_phases', false);
+% NBM_run(4, 'L', false, 2, 'all_phases', false);
+% NBM_run(5, 'L', false, 2, 'all_phases', false);
+% NBM_run(6, 'L', false, 0, 'all_phases', false);
+% 
+% NBM_run(1, 'R', false, 3, 'all_phases', false);
+% NBM_run(2, 'R', false, 4, 'all_phases', false);
+% NBM_run(3, 'R', false, 3, 'all_phases', false);
+% NBM_run(4, 'R', false, 2, 'all_phases', false);
+% NBM_run(5, 'R', false, 2, 'all_phases', false);
+% NBM_run(6, 'R', false, 0, 'all_phases', false);
 
 % TODO add to single_subject_pipeline, but careful: assumes a stored nifti
 % file

@@ -464,12 +464,35 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
         % Sets up parameters for the heating simulation and runs it
         if confirm_overwriting(filename_heating_data, parameters) && (parameters.interactive == 0 || confirmation_dlg('Running the thermal simulations will take a long time, are you sure?', 'Yes', 'No')) 
             
+            % % Set sensor along the focal axis (original, one-transducer solution)
+            % heating_window_dims = ones(2,3);
+            % for i = 1:2
+            %     heating_window_dims(:,i) = [...
+            %         max(1,                      -parameters.thermal.sensor_xy_halfsize + parameters.transducer.pos_grid(i)), ...
+            %         min(parameters.grid_dims(i), parameters.thermal.sensor_xy_halfsize + parameters.transducer.pos_grid(i))];
+            % end
+
+            % TODO quick & dirty adjustments; check if this might go out of
+            % bounds of the simulation grid size!
+
             % Set sensor along the focal axis 
             heating_window_dims = ones(2,3);
+            % Loop through each dimension (1 and 2) for x and y coordinates
             for i = 1:2
-                heating_window_dims(:,i) = [...
-                    max(1, -parameters.thermal.sensor_xy_halfsize + parameters.transducer.pos_grid(i)), ...
-                    min(parameters.grid_dims(i), parameters.thermal.sensor_xy_halfsize + parameters.transducer.pos_grid(i))];
+                % Initialize arrays to collect bounds for all transducers
+                max_bounds = [];
+                min_bounds = [];
+                % Loop through each transducer
+                for j = 1:length(parameters.transducers)
+                    % Calculate bounds for each transducer in the current dimension
+                    max_bound = max(1, -parameters.thermal.sensor_xy_halfsize + parameters.transducers(j).pos_grid(i));
+                    min_bound = min(parameters.grid_dims(i), parameters.thermal.sensor_xy_halfsize + parameters.transducers(j).pos_grid(i));
+                    % Append bounds to arrays
+                    max_bounds = [max_bounds, max_bound];
+                    min_bounds = [min_bounds, min_bound];
+                end
+                % Set the heating window bounds as the overall max and min across transducers
+                heating_window_dims(:, i) = [max(max_bounds); min(min_bounds)];
             end
 
             % Sets up a window to perform simulations in

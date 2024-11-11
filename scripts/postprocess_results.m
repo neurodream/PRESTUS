@@ -7,8 +7,8 @@ close all; clear; clc;
 % set parameters:
 sub_id = 6;
 prefix_bilateral    = 'L+y-z--l-z_R+y-z--r-z_';
-prefix_unilateral_r = 'L+z--r+z_R+z--r+z_all_phases';
-prefix_unilateral_l = 'L+z--l+z_R+z--l+z_all_phases';
+prefix_unilateral_r = 'L+z--r_R+z--r_all_phases';
+prefix_unilateral_l = 'L+z--l_R+z--l_all_phases';
 
 % cd to PRESTUS path
 currentFile = matlab.desktop.editor.getActiveFilename;
@@ -21,8 +21,6 @@ addpath('functions');
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
 %% load in the results and readout
-
-filename = sprintf('acoustic_results.csv', sub_id);
 
 % List of IDs to loop over
 IDs = {
@@ -42,6 +40,8 @@ IDs = {
 
 % IDs = {'_L+y+z--l+z_R+y+z--l+z_test_undershoot'};
 for sub_id = 1:5
+
+    filename = sprintf('acoustic_results_%03d.csv', sub_id);
 
     nifti_path = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sub_id), 'final_tissues.nii.gz');
 
@@ -79,9 +79,9 @@ for sub_id = 1:5
     
         % [isppa, p, mi] = acoustic_mat_to_nifti(sub_id, ID, fullfile(parameters.seg_path, sprintf('sub-%03d', sub_id)), true);
 
-        isppa = niftiread(fullfile(parameters.seg_path, sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_intensity%s.nii.gz', sub_id, ID)));
-        p = niftiread(fullfile(parameters.seg_path, sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_pressure%s.nii.gz', sub_id, ID)));
-        mi = niftiread(fullfile(parameters.seg_path, sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_mechanicalindex%s.nii.gz', sub_id, ID)));
+        isppa = niftiread(fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_intensity%s.nii.gz', sub_id, ID)));
+        p = niftiread(fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_pressure%s.nii.gz', sub_id, ID)));
+        mi = niftiread(fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sub_id), sprintf('sub-%03d_final_mechanicalindex%s.nii.gz', sub_id, ID)));
         
         p = p/1e6; % in megapascal
         i = isppa;

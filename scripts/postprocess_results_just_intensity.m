@@ -44,8 +44,8 @@ brain_inner = brain & ~skull_dilated;
 % targetL = [96 144 149];
 % targetR = [130 144 150];
 T = readtable('data/transducer_pos/position_LUT.xlsx');
-targetL = [T.x_l(T.sbj_ID == sub_id) T.y_l(T.sbj_ID == sub_id) T.z_l(T.sbj_ID == sub_id)];
-targetR = [T.x_r(T.sbj_ID == sub_id) T.y_r(T.sbj_ID == sub_id) T.z_r(T.sbj_ID == sub_id)];
+targetL = [T.y_l(T.sbj_ID == sub_id) T.x_l(T.sbj_ID == sub_id) T.z_l(T.sbj_ID == sub_id)];
+targetR = [T.y_r(T.sbj_ID == sub_id) T.x_r(T.sbj_ID == sub_id) T.z_r(T.sbj_ID == sub_id)];
 
 r = round(5/mean(info.PixelDimensions));
 % Equation of the sphere: (x - px)^2 + (y - py)^2 + (z - pz)^2 <= r^2

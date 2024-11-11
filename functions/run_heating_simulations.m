@@ -18,7 +18,7 @@ function [thermal_diff_obj, time_status_seq, maxT,focal_planeT, maxCEM43, CEM43]
 % Convert the absorption coefficients to nepers/m (!)
 % for the following, see also fitPowerLawParamsMulti.m
 % define frequency in rad/s
-w = 2*pi*parameters.transducer.source_freq_hz;
+w = 2*pi*parameters.transducers(1).source_freq_hz; % TODO note assumes same source freq for every transducer!! enable different source freqs between transducers
 % convert absorption to Nepers/((rad/s)^y m)
 a0_np = db2neper(kwave_medium.alpha_coeff, kwave_medium.alpha_power);
 alpha_np = a0_np.*w.^kwave_medium.alpha_power;

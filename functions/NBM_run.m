@@ -71,9 +71,9 @@ update_transducers_and_run(subject_id, parameters, ID, 'none');
 if with_variations
     update_transducers_and_run(subject_id, parameters, [ID 'var1'], 'transducer');
     % update_transducers_and_run(subject_id, parameters, [ID 'var2'], 'transducer');
-    update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
+    % update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
     % update_transducers_and_run(subject_id, parameters, [ID 'var4'], 'focus');
-    update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
+    % update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
     % update_transducers_and_run(subject_id, parameters, [ID 'var6'], 'both');
 end
 
