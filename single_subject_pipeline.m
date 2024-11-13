@@ -523,30 +523,30 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
         if isempty(medium_masks)
             medium_masks = zeros(parameters.grid_dims);
         end
-
-        % Creates an output table for temperature readings
-        output_table = readtable(output_pressure_file);
         
         % convert GPU data 
         maxT = gather(maxT);
         CEM43 = gather(maxCEM43);
 
-        output_table.maxT = max(maxT, [], 'all');
-        output_table.maxCEM43 = max(CEM43, [], 'all');
-        % Overwrites the max temperature by dividing it up for each layer
-        % in case a layered simulation_medium was selected
-        if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
-            output_table.maxT_brain = masked_max_3d(maxT, brain_mask);
-            output_table.maxT_skull = masked_max_3d(maxT, skull_mask); 
-            output_table.maxT_skin = masked_max_3d(maxT, skin_mask);
-            output_table.riseT_brain = masked_max_3d(maxT, brain_mask)-parameters.thermal.temp_0.brain;
-            output_table.riseT_skull = masked_max_3d(maxT, skull_mask)-parameters.thermal.temp_0.skull; 
-            output_table.riseT_skin = masked_max_3d(maxT, skin_mask)-parameters.thermal.temp_0.skin;
-            output_table.CEM43_brain = masked_max_3d(CEM43, brain_mask);
-            output_table.CEM43_skull = masked_max_3d(CEM43, skull_mask); 
-            output_table.CEM43_skin = masked_max_3d(CEM43, skin_mask);
-        end
-        writetable(output_table, output_pressure_file);
+        % % Creates an output table for temperature readings
+        % output_table = readtable(output_pressure_file);
+        % 
+        % output_table.maxT = max(maxT, [], 'all');
+        % output_table.maxCEM43 = max(CEM43, [], 'all');
+        % % Overwrites the max temperature by dividing it up for each layer
+        % % in case a layered simulation_medium was selected
+        % if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
+        %     output_table.maxT_brain = masked_max_3d(maxT, brain_mask);
+        %     output_table.maxT_skull = masked_max_3d(maxT, skull_mask); 
+        %     output_table.maxT_skin = masked_max_3d(maxT, skin_mask);
+        %     output_table.riseT_brain = masked_max_3d(maxT, brain_mask)-parameters.thermal.temp_0.brain;
+        %     output_table.riseT_skull = masked_max_3d(maxT, skull_mask)-parameters.thermal.temp_0.skull; 
+        %     output_table.riseT_skin = masked_max_3d(maxT, skin_mask)-parameters.thermal.temp_0.skin;
+        %     output_table.CEM43_brain = masked_max_3d(CEM43, brain_mask);
+        %     output_table.CEM43_skull = masked_max_3d(CEM43, skull_mask); 
+        %     output_table.CEM43_skin = masked_max_3d(CEM43, skin_mask);
+        % end
+        % writetable(output_table, output_pressure_file);
 
         % Creates a visual overlay of the transducer
         [~, source_labels] = transducer_setup(parameters.transducer, trans_pos_final(1,:), focus_pos_final(1,:), ...

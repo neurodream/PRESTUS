@@ -113,6 +113,18 @@ pml_size: 10
 # (40 is the conservative default; the mask is dilated with csf_mask_expansion_factor/voxel_size_mm cubic kernel)
 csf_mask_expansion_factor: 40
 
+thermal:
+  # Optional parameters:
+  temp_0: #[deg C] initial temperature
+    water: 37
+    skull: 36
+    brain: 37
+    skin:  35
+    skull_trabecular: 37
+    skull_cortical:  36
+  sensor_xy_halfsize: 100 # maximum size of the sensor window in which the temperature is recorded (in grid units)
+  record_t_at_every_step: 0 # should we record temperature for every time step _for the whole sensor window_ (memory intensive, turn off if you experience 'out of memory' issues)
+
 # Use the kwaveArray class for simulations
 use_kWaveArray: 0
 

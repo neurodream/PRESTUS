@@ -36,6 +36,7 @@ focus_pos_shift     = [0 0 z_shift;       0 0 z_shift];
 
 % base config ("hard" params)
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
+parameters = load_parameters('nico_test_double_acoustic_100mm_same_temp0_config.yaml');
 
 ID = [ID_part '_' extra_ID_suffix]; % TODO make sham a variable!
 parameters.results_filename_affix = ID; % TODO this line needed? but also not dangerous

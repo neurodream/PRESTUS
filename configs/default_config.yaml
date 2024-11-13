@@ -173,9 +173,9 @@ thermal:
     water: 37
     skull: 36
     brain: 37
-    skin: 35
+    skin:  35
     skull_trabecular: 37
-    skull_cortical: 36
+    skull_cortical:  36
   sensor_xy_halfsize: 100 # maximum size of the sensor window in which the temperature is recorded (in grid units)
   record_t_at_every_step: 0 # should we record temperature for every time step _for the whole sensor window_ (memory intensive, turn off if you experience 'out of memory' issues)
 
