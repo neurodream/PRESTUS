@@ -1,4 +1,4 @@
-function [] = NBM_run(subject_id, focus_side, is_sham, z_shift, extra_ID_suffix, with_variations)
+function [] = NBM_run(subject_id, focus_side, is_sham, z_shift, goal_intensity, extra_ID_suffix, imprecision_modeling)
 
 % focus_side: L, R, BL
 
@@ -49,9 +49,9 @@ for i = 1:numel(parameters.transducers)
 
     % TODO figure out which optimization works best
     if contralateral(i)
-        parameters = calculate_transducer_phases(parameters, i, distance, 40, 100, sham(i)); % distance + 30
+        parameters = calculate_transducer_phases(parameters, i, distance, 40, goal_intensity, sham(i)); % distance + 30
     elseif ~contralateral(i)
-        parameters = calculate_transducer_phases(parameters, i, distance, 15, 100, sham(i));
+        parameters = calculate_transducer_phases(parameters, i, distance, 15, goal_intensity, sham(i));
     end
 
     % parameters = calculate_transducer_phases(parameters, i, focal_distances_mm(i), 15, 100, sham(i));
@@ -68,14 +68,7 @@ end
 % add field of free water axial intensity to strucuts
 parameters = get_simulated_axial_intensity(parameters);
 
-update_transducers_and_run(subject_id, parameters, ID, 'none');
-if with_variations
-    update_transducers_and_run(subject_id, parameters, [ID 'var1'], 'transducer');
-    % update_transducers_and_run(subject_id, parameters, [ID 'var2'], 'transducer');
-    % update_transducers_and_run(subject_id, parameters, [ID 'var3'], 'focus');
-    % update_transducers_and_run(subject_id, parameters, [ID 'var4'], 'focus');
-    % update_transducers_and_run(subject_id, parameters, [ID 'var5'], 'both');
-    % update_transducers_and_run(subject_id, parameters, [ID 'var6'], 'both');
-end
+% update_transducers_and_run(subject_id, parameters, ID, 'none');
+update_transducers_and_run(subject_id, parameters, [ID '_imprecision' imprecision_modeling], imprecision_modeling);
 
 end

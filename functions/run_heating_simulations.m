@@ -53,16 +53,69 @@ maxCEM43 = thermal_diff_obj.cem43;
 [~, on_off_repetitions, on_steps_n,  on_steps_dur, off_steps_n, off_steps_dur, post_stim_steps_n, post_stim_time_step_dur] = ...
     check_thermal_parameters(parameters);
 
+
+
+
+
+
+
+% Calculate total time steps during trials
+if off_steps_n > 0
+    steps_per_pulse = on_steps_n + off_steps_n;
+else
+    steps_per_pulse = on_steps_n;
+end
+
+steps_per_trial = on_off_repetitions * steps_per_pulse;
+total_steps_during_trials = parameters.thermal.n_trials * steps_per_trial;
+
+% Calculate total trials time
+total_trials_time = parameters.thermal.n_trials * on_off_repetitions * ...
+    (on_steps_n * on_steps_dur + off_steps_n * off_steps_dur);
+
+% Set cooling step duration and number of steps
+cooling_step_duration = on_steps_dur; % or choose a suitable value
+cooling_steps_n = ceil(total_trials_time / cooling_step_duration);
+
+% Adjust cooling_steps_n if necessary
+if cooling_steps_n ~= round(cooling_steps_n)
+    cooling_steps_n = round(cooling_steps_n);
+    cooling_step_duration = total_trials_time / cooling_steps_n;
+    warning('Cooling steps adjusted to integer number of steps.');
+end
+
+% Calculate total time points
+total_timepoints = 1 + total_steps_during_trials + post_stim_steps_n + cooling_steps_n;
+
+% Initialize focal_planeT and CEM43 with the total number of time points
+focal_planeT = gpuArray(NaN([size(maxT,[1,3]) total_timepoints]));
+focal_planeT(:,:,1) = squeeze(maxT(:,trans_pos(2),:));
+
+CEM43 = gpuArray(NaN([size(maxT,[1,3]) total_timepoints]));
+CEM43(:,:,1) = squeeze(maxCEM43(:,trans_pos(2),:));
+
+cur_timepoint = 1;
+
+% Initialize time_status_seq
 time_status_seq = struct('status', {'off'}, 'time', {0}, 'step', {0}, 'recorded', {1});
 
-% Set final parameters for simulation
-total_timepoints = 1+parameters.thermal.n_trials*(on_off_repetitions*(1+double(off_steps_n>0))+1);
-cur_timepoint = 1;
-focal_planeT = gpuArray(NaN([size(maxT,[1,3]) total_timepoints]));
-focal_planeT(:,:,cur_timepoint) = squeeze(maxT(:,trans_pos(2),:));
 
-CEM43 = gpuArray(NaN([size(maxT,[1,3]),total_timepoints]));
-CEM43(:,:,cur_timepoint) = squeeze(maxCEM43(:,trans_pos(2),:));
+
+
+
+% time_status_seq = struct('status', {'off'}, 'time', {0}, 'step', {0}, 'recorded', {1});
+% 
+% % Set final parameters for simulation
+% total_timepoints = 1+parameters.thermal.n_trials*(on_off_repetitions*(1+double(off_steps_n>0))+1);
+% total_timepoints = total_timepoints*2;
+% cur_timepoint = 1;
+% focal_planeT = gpuArray(NaN([size(maxT,[1,3]) total_timepoints]));
+% focal_planeT(:,:,cur_timepoint) = squeeze(maxT(:,trans_pos(2),:));
+% 
+% CEM43 = gpuArray(NaN([size(maxT,[1,3]),total_timepoints]));
+% CEM43(:,:,cur_timepoint) = squeeze(maxCEM43(:,trans_pos(2),:));
+
+
 
 % Loop over trials, so that the heat can accumulate
 for trial_i = 1:parameters.thermal.n_trials
@@ -141,6 +194,36 @@ if post_stim_steps_n > 0
   curCEM43 = thermal_diff_obj.cem43;
   focal_planeT(:,:,cur_timepoint) = squeeze(curT(:,trans_pos(2),:));
   CEM43(:,:,cur_timepoint) = squeeze(curCEM43(:,trans_pos(2),:));
+end
+
+% Cool-off period
+fprintf('Starting cool-off period...\n');
+
+thermal_diff_obj.Q(:,:,:) = 0; % Turn off the sound source
+
+for step_i = 1:cooling_steps_n
+    thermal_diff_obj.takeTimeStep(1, cooling_step_duration);
+    
+    % Update time_status_seq
+    time_status_seq = [time_status_seq, ...
+        struct('time', max([time_status_seq(:).time]) + cooling_step_duration, ...
+               'step', max([time_status_seq(:).step]) + 1, ...
+               'status', "off", ...
+               'recorded', 1)];
+    
+    % Update temperatures and CEM43
+    cur_timepoint = cur_timepoint + 1;
+    if cur_timepoint > total_timepoints
+        error('cur_timepoint exceeds total_timepoints during cool-off period');
+    end
+    curT = thermal_diff_obj.T;
+    curCEM43 = thermal_diff_obj.cem43;
+    focal_planeT(:,:,cur_timepoint) = squeeze(curT(:,trans_pos(2),:));
+    CEM43(:,:,cur_timepoint) = squeeze(curCEM43(:,trans_pos(2),:));
+    
+    % Update maxT and maxCEM43 where applicable
+    maxT = max(maxT, curT);
+    maxCEM43 = max(maxCEM43, curCEM43);
 end
 
 end

@@ -93,8 +93,8 @@ focus_area_radius: 5 # [mm]
 thermal:
   duty_cycle: 0.1 # share of the stimulation duration during which the stimulation is on [0 to 1] (trial length = duty_cycle * stim_duration) # TODO just used to calculate on_off_step_duration?? i.e. mostly an epiphenomenon?
   iti: 0.2 # 0.6 # [s] interval between the trials, from the start of one trial to the start of another
-  n_trials: 400 # number of trials to simulate; the total simulated duration is then n_trials*iti seconds
-  stim_duration: 0.02 # 0.2 # [s] stimulation duration within a trial
+  n_trials: 5 # 400 # number of trials to simulate; the total simulated duration is then n_trials*iti seconds
+  stim_duration: 0.1 # 0.2 # [s] stimulation duration within a trial
   # Pulse repetition frequency is not used since the cooling effects between these cycles are limited
 
   # These should only be changed if they don't meet the criteria described in "run_heating_simulations"
@@ -102,6 +102,17 @@ thermal:
   post_stim_time_step_dur: 0.02 # 0.1 # post-stimulation (inter-trial) steps
   on_off_step_duration: 0.02 # 0.200 # duration of the on+off cycle (e.g., with a duty cycle of 0.3 and 0.01 s time steps for simulation, the whole on+off cycle will take 0.1 s)
   equal_steps: 0 # is the duration of the simulation steps equal for on and off steps? if not, it is computed based on the sim_time_steps * n_steps where n_steps is the needed number of on and off steps derived from the duty cycle
+
+  # Optional parameters:
+  temp_0: #[deg C] initial temperature
+    water: 37
+    skull: 37
+    brain: 37
+    skin:  37
+    skull_trabecular: 37
+    skull_cortical:  37
+  sensor_xy_halfsize: 100 # maximum size of the sensor window in which the temperature is recorded (in grid units)
+  record_t_at_every_step: 0 # should we record temperature for every time step _for the whole sensor window_ (memory intensive, turn off if you experience 'out of memory' issues)
 
 # select PML size, the default one for 3D is 10 (PML is the layer used in
 # kWaves to absorb waves reaching the end of the computational grid,
@@ -113,17 +124,6 @@ pml_size: 10
 # (40 is the conservative default; the mask is dilated with csf_mask_expansion_factor/voxel_size_mm cubic kernel)
 csf_mask_expansion_factor: 40
 
-thermal:
-  # Optional parameters:
-  temp_0: #[deg C] initial temperature
-    water: 37
-    skull: 36
-    brain: 37
-    skin:  35
-    skull_trabecular: 37
-    skull_cortical:  36
-  sensor_xy_halfsize: 100 # maximum size of the sensor window in which the temperature is recorded (in grid units)
-  record_t_at_every_step: 0 # should we record temperature for every time step _for the whole sensor window_ (memory intensive, turn off if you experience 'out of memory' issues)
 
 # Use the kwaveArray class for simulations
 use_kWaveArray: 0

@@ -17,10 +17,11 @@ parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
 % load('sub-001_layered_heating_resL+z--l_R+z--l_heating_check')
 
-sbj_ID = 2;
-affix = 'L--r_R--r_heating_check_400trials';
-affix = 'L+z--l_R+z--l_heating_check_400trials';
-affix = 'L+z--r_R+z--r_heating_check_400trials';
+sbj_ID = 1;
+% affix = 'L--r_R--r_heating_check_400trials';
+% affix = 'L+z--l_R+z--l_heating_check_400trials';
+% affix = 'L+z--r_R+z--r_heating_check_400trials';
+affix = 'L+z--r_R+z--r_heating_check_400trials_same_temp0_DC50';
 
 data_path = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
 filename_heating = sprintf('sub-%03d_layered_heating_res%s', sbj_ID, affix);
@@ -36,6 +37,12 @@ filename_parameters = filename_parameters.name;
 load(fullfile(data_path, filename_heating));
 load(fullfile(data_path, filename_parameters));
 parameters.usepseudoCT = 0;
+parameters.data_path = '/home/sleep/nicade/Documents/scans/';
+parameters.seg_path = '/home/sleep/nicade/Documents/scans/segmentation_results/';
+parameters.temp_output_dir = fullfile(parameters.data_path, 'sim_outputs/');
+parameters.output_dir = fullfile(parameters.temp_output_dir, sprintf('sub-%03d', sbj_ID));
+parameters.debug_dir = fullfile(parameters.output_dir, 'debug');
+parameters.subject_id = sbj_ID; % TODO interesting that this is not found
 
 % convert to normal world coordinates & store nifti
 % TODO: add this to single_subject_pipeline; store instead of mat
