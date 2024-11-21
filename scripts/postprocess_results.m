@@ -16,6 +16,7 @@ rootpath = fileparts(fileparts(currentFile));
 cd(rootpath); % repos/PRESTUS_forked/
 
 addpath('functions');
+addpath(genpath('toolboxes'));
 
 % base config ("hard" params)
 parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');

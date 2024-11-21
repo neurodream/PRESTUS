@@ -71,3 +71,15 @@ isppa_brain_inner = isppa(brain_inner);
 isppa_brain_inner_max = max(isppa_brain_inner(:))
 pressure_brain_inner = pressure(brain_inner);
 pressure_brain_inner_max = max(pressure_brain_inner(:))/1000000
+
+%%
+
+tissue_heat(tissue_heat == 0) = NaN;
+
+figure;
+
+% Loop through each row of tissue_heat
+for i = 1:6
+    subplot(6, 1, i); % Create a subplot (6 rows, 1 column, i-th position)
+    plot(tissue_heat(i, :)); % Plot the i-th row of tissue_heat
+end

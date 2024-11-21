@@ -65,7 +65,7 @@ overwrite_simnibs: 0
 run_source_setup: 1 # Should we set up acoustic source? useful to switch off to look at initial segmentation results only
 run_acoustic_sims: 1 # Should we run the acoustic simulations? useful to switch off to look at initial segmentation results only
 run_heating_sims: 1 # Should we run the heating simulations? useful to switch off to look at initial segmentation results only
-run_posthoc_water_sims: 1 # Should we run the simulations in free water with exactly the same parameter? useful for double checking that the true intensity matches the desired one
+run_posthoc_water_sims: 0 # Should we run the simulations in free water with exactly the same parameter? useful for double checking that the true intensity matches the desired one
 
 # In interactive mode (1), the figures are shown and confirmation dialogs appear (the latter of which will halt the pipeline until confirmation)
 # In non-interactive mode (0), no plots are shown and no confirmation dialogs will 
@@ -93,7 +93,7 @@ focus_area_radius: 5 # [mm]
 thermal:
   duty_cycle: 0.1 # share of the stimulation duration during which the stimulation is on [0 to 1] (trial length = duty_cycle * stim_duration) # TODO just used to calculate on_off_step_duration?? i.e. mostly an epiphenomenon?
   iti: 0.2 # 0.6 # [s] interval between the trials, from the start of one trial to the start of another
-  n_trials: 5 # 400 # number of trials to simulate; the total simulated duration is then n_trials*iti seconds
+  n_trials: 400 # number of trials to simulate; the total simulated duration is then n_trials*iti seconds
   stim_duration: 0.1 # 0.2 # [s] stimulation duration within a trial
   # Pulse repetition frequency is not used since the cooling effects between these cycles are limited
 

@@ -1,4 +1,4 @@
-function [thermal_diff_obj, time_status_seq, maxT,focal_planeT, maxCEM43, CEM43] = run_heating_simulations(sensor_data, kgrid, kwave_medium, sensor, source, parameters, trans_pos)
+function [thermal_diff_obj, time_status_seq, maxT,focal_planeT, maxCEM43, CEM43, tissue_specific_heat, tissue_specific_CEM43] = run_heating_simulations(sensor_data, kgrid, kwave_medium, sensor, source, parameters, trans_pos)
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %                    Runs the heating simulations                   %
@@ -14,6 +14,8 @@ function [thermal_diff_obj, time_status_seq, maxT,focal_planeT, maxCEM43, CEM43]
 % For a detailed explanation on how to correctly configure your     %
 % thermal parameters, see thermal simulations getting started.      %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+
 
 % Convert the absorption coefficients to nepers/m (!)
 % for the following, see also fitPowerLawParamsMulti.m
@@ -74,7 +76,7 @@ total_trials_time = parameters.thermal.n_trials * on_off_repetitions * ...
     (on_steps_n * on_steps_dur + off_steps_n * off_steps_dur);
 
 % Set cooling step duration and number of steps
-cooling_step_duration = on_steps_dur; % or choose a suitable value
+cooling_step_duration = on_steps_dur + off_steps_dur; % or choose a suitable value
 cooling_steps_n = ceil(total_trials_time / cooling_step_duration);
 
 % Adjust cooling_steps_n if necessary
@@ -99,10 +101,21 @@ cur_timepoint = 1;
 % Initialize time_status_seq
 time_status_seq = struct('status', {'off'}, 'time', {0}, 'step', {0}, 'recorded', {1});
 
+% initialize an output that for every tissue and time point shows the
+% maximum value
+tissues = fieldnames(parameters.medium);
+tissue_specific_heat  = zeros(numel(tissues), total_timepoints);
+tissue_specific_CEM43 = zeros(numel(tissues), total_timepoints);
 
+% initialize a logical 3D matrix the shape of the whole medium
+tissue_labels = zeros(size(kwave_medium.sound_speed));
+for tissue_ID = 1:length(tissues)
+    tissue = tissues{tissue_ID};
+    tissue_soundspeed = parameters.medium.(tissue).sound_speed;
+    tissue_labels(kwave_medium.sound_speed == tissue_soundspeed) = tissue_ID;
+end
 
-
-
+% % old approach to have cool-off period
 % time_status_seq = struct('status', {'off'}, 'time', {0}, 'step', {0}, 'recorded', {1});
 % 
 % % Set final parameters for simulation
@@ -152,9 +165,21 @@ for trial_i = 1:parameters.thermal.n_trials
                  'recorded',1)];
       curT = thermal_diff_obj.T;
       curCEM43 = thermal_diff_obj.cem43;
+
       cur_timepoint = cur_timepoint+1;
       focal_planeT(:,:,cur_timepoint) = squeeze(curT(:,trans_pos(2),:));
       CEM43(:,:,cur_timepoint) = squeeze(curCEM43(:,trans_pos(2),:));
+      % fill in the maximum tissue thermal properties
+      for tissue_ID = 1:length(tissues)
+          cur_max_T = max(curT(tissue_labels == tissue_ID));
+          cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+          if ~isempty(cur_max_T)
+              tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
+          end
+          if ~isempty(cur_max_CEM43)
+              tissue_specific_CEM43(tissue_ID, cur_timepoint) = cur_max_CEM43;
+          end
+      end
 
       % update maxT and maxCEM43 where applicable
       maxT = max(maxT, curT);
@@ -176,6 +201,17 @@ for trial_i = 1:parameters.thermal.n_trials
               squeeze(curT(:,trans_pos(2),:));
           CEM43(:,:,cur_timepoint) = ...
               squeeze(curCEM43(:,trans_pos(2),:));
+          % fill in the maximum tissue thermal properties
+          for tissue_ID = 1:length(tissues)
+              cur_max_T = max(curT(tissue_labels == tissue_ID));
+              cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+              if ~isempty(cur_max_T)
+                  tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
+              end
+              if ~isempty(cur_max_CEM43)
+                  tissue_specific_CEM43(tissue_ID, cur_timepoint) = cur_max_CEM43;
+              end
+          end
       end
   end
 end
@@ -194,6 +230,17 @@ if post_stim_steps_n > 0
   curCEM43 = thermal_diff_obj.cem43;
   focal_planeT(:,:,cur_timepoint) = squeeze(curT(:,trans_pos(2),:));
   CEM43(:,:,cur_timepoint) = squeeze(curCEM43(:,trans_pos(2),:));
+  % fill in the maximum tissue thermal properties
+  for tissue_ID = 1:length(tissues)
+      cur_max_T = max(curT(tissue_labels == tissue_ID));
+      cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+      if ~isempty(cur_max_T)
+        tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
+      end
+      if ~isempty(cur_max_CEM43)
+          tissue_specific_CEM43(tissue_ID, cur_timepoint) = cur_max_CEM43;
+      end
+  end
 end
 
 % Cool-off period
@@ -220,6 +267,17 @@ for step_i = 1:cooling_steps_n
     curCEM43 = thermal_diff_obj.cem43;
     focal_planeT(:,:,cur_timepoint) = squeeze(curT(:,trans_pos(2),:));
     CEM43(:,:,cur_timepoint) = squeeze(curCEM43(:,trans_pos(2),:));
+    % fill in the maximum tissue thermal properties
+    for tissue_ID = 1:length(tissues)
+      cur_max_T = max(curT(tissue_labels == tissue_ID));
+      cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+      if ~isempty(cur_max_T)
+        tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
+      end
+      if ~isempty(cur_max_CEM43)
+          tissue_specific_CEM43(tissue_ID, cur_timepoint) = cur_max_CEM43;
+      end
+    end
     
     % Update maxT and maxCEM43 where applicable
     maxT = max(maxT, curT);

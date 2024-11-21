@@ -220,6 +220,10 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     %% SETUP MEDIUM
     % For more documentation, see 'setup_medium'
     disp('Setting up kwave medium...')
+    
+    % % TODO: debug delete!!! test for posthoc water sims!
+    % parameters.simulation_medium = 'water';
+    % medium_masks = [];
 
     if parameters.usepseudoCT == 1
         kwave_medium = setup_medium(parameters, medium_masks, segmented_image_cropped);
@@ -503,11 +507,12 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
             kwave_medium.temp_0 = temp_0;
 
             % For more documentation, see 'run_heating_simulations'
-            [kwaveDiffusion, time_status_seq, maxT, focal_planeT, maxCEM43, focal_planeCEM43]= ...
+            [kwaveDiffusion, time_status_seq, maxT, focal_planeT, maxCEM43, focal_planeCEM43, tissue_heat, tissue_CEM43]= ...
                 run_heating_simulations(sensor_data, kgrid, kwave_medium, sensor, source, parameters, trans_pos_final);
             
             save(filename_heating_data, 'kwaveDiffusion','time_status_seq',...
-                'heating_window_dims','sensor','maxT','focal_planeT','maxCEM43','focal_planeCEM43','-v7.3');
+                'heating_window_dims','sensor','maxT','focal_planeT','maxCEM43','focal_planeCEM43', ...
+                'tissue_heat', 'tissue_CEM43', '-v7.3');
 
         else 
             disp('Skipping, the file already exists, loading it instead.')
