@@ -30,5 +30,6 @@ function update_transducers_and_run(subject_id, parameters, ID, vary)
     
     % Run the pipeline
     single_subject_pipeline_with_slurm(subject_id, parameters, "08:00:00");
+    % single_subject_pipeline_with_qsub(subject_id, parameters);
     % single_subject_pipeline(subject_id, parameters); % TODO change back or keep commented!!
 end

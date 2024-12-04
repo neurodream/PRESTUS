@@ -1,4 +1,7 @@
-% assumes a mat file
+% TODO: filename misnomer: this script currently only extracts niftis from
+% mat files exported from single_subject_pipeline
+% for quantification of thermal (and acoustic) measures, see the script
+% quick_quantification_reporting
 
 close all; clear; clc;
 
@@ -17,15 +20,17 @@ parameters = load_parameters('nico_test_double_acoustic_100mm_config.yaml');
 
 % load('sub-001_layered_heating_resL+z--l_R+z--l_heating_check')
 
-for sbj_ID = 1:6
+for sbj_ID = 8%1:6
     % affix = 'L--r_R--r_heating_check_400trials';
     % affix = 'L+z--l_R+z--l_heating_check_400trials';
     % affix = 'L+z--r_R+z--r_heating_check_400trials';
     % affix = 'L+z--r_R+z--r_heating_check_400trials_same_temp0_DC50';
-    affix = 'L+z-r_R+z-r_it1_heatingtimeline_imprecisionnone';
+    affix = 'L*--r_R*--r_it1_heatingtimeline_imprecisionnone';
     
     data_path = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
-    filename_heating = sprintf('sub-%03d_layered_heating_res%s', sbj_ID, affix);
+
+    filename_heating = dir(fullfile(data_path, sprintf('sub-%03d_layered_heating_res%s.mat', sbj_ID, affix)));
+    filename_heating = filename_heating.name;
     filename_parameters = dir(fullfile(data_path, sprintf('sub-%03d_parameters%s*', sbj_ID, affix)));
     filename_parameters = filename_parameters.name;
     
@@ -48,8 +53,8 @@ for sbj_ID = 1:6
     % convert to normal world coordinates & store nifti
     % TODO: add this to single_subject_pipeline; store instead of mat
     
-    fname_out_heating = sprintf('sub-%03d_%s_heating%s', sbj_ID, 'layered', affix);
-    fname_out_TD      = sprintf('sub-%03d_%s_maxCEM43%s', sbj_ID, 'layered', affix);
+    fname_out_heating = strrep(sprintf('sub-%03d_%s_heating%s', sbj_ID, 'layered', affix), '*', '');
+    fname_out_TD      = strrep(sprintf('sub-%03d_%s_maxCEM43%s', sbj_ID, 'layered', affix), '*', '');
     
     [medium_masks, ~, ~, ~, ~, ~, t1_header, final_transformation_matrix, ...
         inv_final_transformation_matrix] = preprocess_brain(parameters, sbj_ID, 1);

@@ -8,8 +8,8 @@ target_L = [T.y_l(T.sbj_ID == sbj_ID) T.x_l(T.sbj_ID == sbj_ID) T.z_l(T.sbj_ID =
 target_R = [T.y_r(T.sbj_ID == sbj_ID) T.x_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
 
 % make sure the subject ID match of seg_file and target:
-parameters.seg_path = 'M:\Documents\scans\segmentation_results';
-parameters.data_path = 'M:\Documents\scans';
+% parameters.seg_path = 'M:\Documents\scans\segmentation_results';
+% parameters.data_path = 'M:\Documents\scans';
 segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
 filename_segmented = fullfile(segmentation_folder, 'final_tissues.nii.gz');
 
@@ -41,7 +41,7 @@ hold on;
 if plot_skull
     skull_smooth = smooth3(skull, 'box', 5);
     p_skull = patch(isosurface(skull_smooth, 0.5)); % Extract and plot outer layer
-    set(p_skull, 'FaceAlpha', 0.25, 'FaceColor', 'black', 'EdgeColor', 'none'); % Customize appearance
+    set(p_skull, 'FaceAlpha', 0.25, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
     set(p_skull, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
     isonormals(skull_smooth, p_skull); % Add normals for proper lighting
 end
@@ -125,4 +125,14 @@ if save
     data_folder = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
     figure_file = fullfile(data_folder, sprintf('sub-%03d_3Dplot%s.fig', sbj_ID, parameters.results_filename_affix));
     savefig(figure_file);
+
+    image_file = fullfile(data_folder, sprintf('sub-%03d_3Dplot%s.png', sbj_ID, parameters.results_filename_affix));
+    % Remove grid
+    axis off; % grid off;
+    % Set axes and figure background to none
+    set(gca, 'Color', 'none'); % Make axes background transparent
+    set(gcf, 'Color', 'none'); % Make figure background transparent
+    % Save the figure as a PNG image
+    exportgraphics(gcf, image_file, 'BackgroundColor', 'none');
+
 end

@@ -55,7 +55,7 @@ for i = 1:numel(parameters.transducers)
     end
 
     % parameters = calculate_transducer_phases(parameters, i, focal_distances_mm(i), 15, 100, sham(i));
-    
+
     % store the indended parameters for later debugging:
     parameters.transducers(i).optim_params = [];
     parameters.transducers(i).optim_params.focal_distance_mm = distance;
@@ -68,7 +68,9 @@ end
 % add field of free water axial intensity to strucuts
 parameters = get_simulated_axial_intensity(parameters);
 
-% parameters.thermal.n_trials = 10; % TODO debug delete!!!
+% TODO debug delete!!!
+% parameters.thermal.n_trials = 10;
+% parameters.transducers = parameters.transducers(2);
 
 % update_transducers_and_run(subject_id, parameters, ID, 'none');
 update_transducers_and_run(subject_id, parameters, [ID '_imprecision' imprecision_modeling], imprecision_modeling);

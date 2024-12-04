@@ -15,7 +15,7 @@ function [transducer_voxels] = get_transducer_voxels_absolute_pos(target, trans_
         'Color', transducer_color, 'LineWidth', 4); %
     
     line.Tag = patch_name;
-    add_transducer_shape(trans_pos, target, 'Parameters', parameters, 'TargetType', 'none', 'PatchName', patch_name, 'Color', transducer_color);
+    add_transducer_shape(trans_pos, target, 'Parameters', parameters, 'TargetType', 'none', 'PatchName', char(patch_name), 'Color', transducer_color);
     
     % graphicsArray = findobj('Tag', patch_name);
     % for i = 1:numel(graphicsArray)

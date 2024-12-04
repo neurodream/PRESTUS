@@ -19,8 +19,8 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 %       7. and if errors in spatial precision are to be simulated as well ('none' for no imprecision, 'transducer', 'target', or 'both')
 
 % example:
-% NBM_run(1, 'R', false, 4, 100, 'it1_FW', 'none');
-% NBM_run(1, 'R', true,  4, 100, 'it1_FW', 'none');
+% NBM_run(1, 'R', false, 4, 100, 'it1_FW_transd2', 'none');
+% NBM_run(1, 'R', true,  4, 100, 'it2_heatingtimeline', 'none');
 % NBM_run(2, 'R', false, 4, 100, 'it1_FW', 'none');
 % NBM_run(2, 'R', true,  4, 100, 'it1_FW', 'none');
 % NBM_run(3, 'R', false, 3, 100, 'it1_FW', 'none');
@@ -29,8 +29,10 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % NBM_run(4, 'R', true,  2, 100, 'it1_FW', 'none');
 % NBM_run(5, 'R', false, 2, 100, 'it1_FW', 'none');
 % NBM_run(5, 'R', true,  2, 100, 'it1_FW', 'none');
-NBM_run(6, 'R', false, 0, 100, 'it1_heatingtimeline', 'none');
+% NBM_run(6, 'R', false, 0, 100, 'it1_heatingtimeline', 'none');
 % NBM_run(6, 'R', true,  0, 100, 'it1_FW', 'none');
+% NBM_run(8, 'R', true,  0, 100, 'it2_heatingtimeline', 'none');
+NBM_run(8, 'R', false,  0, 100, 'it3_heatingtimeline', 'none');
 
 % empirical z corrections for the subjects:
 % subject 1: 4

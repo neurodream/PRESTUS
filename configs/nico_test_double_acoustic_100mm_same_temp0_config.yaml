@@ -93,7 +93,7 @@ focus_area_radius: 5 # [mm]
 thermal:
   duty_cycle: 0.1 # share of the stimulation duration during which the stimulation is on [0 to 1] (trial length = duty_cycle * stim_duration) # TODO just used to calculate on_off_step_duration?? i.e. mostly an epiphenomenon?
   iti: 0.2 # 0.6 # [s] interval between the trials, from the start of one trial to the start of another
-  n_trials: 400 # number of trials to simulate; the total simulated duration is then n_trials*iti seconds
+  n_trials: 600 # number of trials to simulate; the total simulated duration is then n_trials*iti seconds
   stim_duration: 0.1 # 0.2 # [s] stimulation duration within a trial
   # Pulse repetition frequency is not used since the cooling effects between these cycles are limited
 
@@ -149,6 +149,7 @@ using_donders_hpc: 1
 
 # Segmentation software (current options are 'headreco' and 'charm')
 segmentation_software: charm
+use_forceqform: 1
 
 # An optional path to LD_LIBRARY used during SimNIBS installation
 # If you experience an `undefined symbol` error in `create_mesh_surf.cpython-39-x86_64-linux-gnu.so`, set the next line to your LD_LIBRARY location

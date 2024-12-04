@@ -212,6 +212,7 @@ code_type: matlab_gpu
 # Only use this if you are using the Donders HPC
 # If not, you would have to do some things by hand (currently it only affects SimNIBS segmentation)
 using_donders_hpc: 1
+submit_medium: 'qsub'
 
 # Segmentation software (current options are 'headreco' and 'charm')
 segmentation_software: charm
