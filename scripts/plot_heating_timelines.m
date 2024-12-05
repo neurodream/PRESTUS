@@ -26,8 +26,10 @@ for sbj_ID = 8%1:6
     %     filename = sprintf('sub-%03d/sub-%03d_layered_heating_resL--r_R--r_it1_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
     %     load(fullfile(filepath, filename), 'time_status_seq', 'tissue_CEM43', 'tissue_heat');
     % end
-    filename = sprintf('sub-%03d/sub-%03d_layered_heating_resL-r_R-r_it1_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
-    load(fullfile(filepath, filename), 'time_status_seq', 'tissue_CEM43', 'tissue_heat');
+    filename = sprintf('sub-%03d/sub-%03d_layered_heating_resL--r_R--r_it4_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
+    filename = 'sub-008/sub-008_layered_heating_resL-r_R-r_it4_heatingtimeline_debug_imprecisionnone.mat';
+    % load(fullfile(filepath, filename), 'time_status_seq', 'tissue_CEM43', 'tissue_heat');
+    load('M:\Documents\scans\sim_outputs\sub-008\sub-008_layered_heating_resL-r_R-r_it4_heatingtimeline_debug_imprecisionnone.mat');
     
     time = [time_status_seq.time];
     
@@ -38,7 +40,7 @@ for sbj_ID = 8%1:6
     tissue_heat(tissue_heat <= 0) = NaN;
     tissue_CEM43_max = max(tissue_CEM43, [], 1);
 
-    plot(time*2, tissue_heat(3,:)); % TODO: check why times 2 needed!!!
+    % plot(time*2, tissue_heat(3,:)); % TODO: check why times 2 needed!!!
     % plot(time*2, tissue_CEM43_max); % TODO: check why times 2 needed!!!
     
 end

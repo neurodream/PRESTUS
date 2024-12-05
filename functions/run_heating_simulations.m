@@ -172,7 +172,7 @@ for trial_i = 1:parameters.thermal.n_trials
       % fill in the maximum tissue thermal properties
       for tissue_ID = 1:length(tissues)
           cur_max_T = max(curT(tissue_labels == tissue_ID));
-          cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+          cur_max_CEM43 = max(curCEM43(tissue_labels == tissue_ID));
           if ~isempty(cur_max_T)
               tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
           end
@@ -204,7 +204,7 @@ for trial_i = 1:parameters.thermal.n_trials
           % fill in the maximum tissue thermal properties
           for tissue_ID = 1:length(tissues)
               cur_max_T = max(curT(tissue_labels == tissue_ID));
-              cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+              cur_max_CEM43 = max(curCEM43(tissue_labels == tissue_ID));
               if ~isempty(cur_max_T)
                   tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
               end
@@ -233,7 +233,7 @@ if post_stim_steps_n > 0
   % fill in the maximum tissue thermal properties
   for tissue_ID = 1:length(tissues)
       cur_max_T = max(curT(tissue_labels == tissue_ID));
-      cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+      cur_max_CEM43 = max(curCEM43(tissue_labels == tissue_ID));
       if ~isempty(cur_max_T)
         tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
       end
@@ -270,7 +270,7 @@ for step_i = 1:cooling_steps_n
     % fill in the maximum tissue thermal properties
     for tissue_ID = 1:length(tissues)
       cur_max_T = max(curT(tissue_labels == tissue_ID));
-      cur_max_CEM43 = max(curT(tissue_labels == tissue_ID));
+      cur_max_CEM43 = max(curCEM43(tissue_labels == tissue_ID));
       if ~isempty(cur_max_T)
         tissue_specific_heat(tissue_ID, cur_timepoint) = cur_max_T;
       end

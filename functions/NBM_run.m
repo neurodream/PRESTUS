@@ -69,7 +69,7 @@ end
 parameters = get_simulated_axial_intensity(parameters);
 
 % TODO debug delete!!!
-% parameters.thermal.n_trials = 10;
+% parameters.thermal.n_trials = 5;
 % parameters.transducers = parameters.transducers(2);
 
 % update_transducers_and_run(subject_id, parameters, ID, 'none');

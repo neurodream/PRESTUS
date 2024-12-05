@@ -32,7 +32,7 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % NBM_run(6, 'R', false, 0, 100, 'it1_heatingtimeline', 'none');
 % NBM_run(6, 'R', true,  0, 100, 'it1_FW', 'none');
 % NBM_run(8, 'R', true,  0, 100, 'it2_heatingtimeline', 'none');
-NBM_run(8, 'R', false,  0, 100, 'it3_heatingtimeline', 'none');
+NBM_run(8, 'R', false,  0, 100, 'it5_heatingtimeline', 'none');
 
 % empirical z corrections for the subjects:
 % subject 1: 4
