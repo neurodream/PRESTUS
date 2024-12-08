@@ -1,0 +1,9 @@
+data_path: /home/sleep/nicade/Documents/scans/
+
+seg_path: /home/sleep/nicade/Documents/scans/segmentation_results/
+
+simnibs_bin_path: /opt/simnibs/4.0.0/simnibs_env/bin/
+
+# Paths to T1 and T2 relative to data_path; all string substitutions will be done using subject_id
+t1_path_template: sub-%1$03d_T1.nii.gz 
+t2_path_template: sub-%1$03d_T2.nii.gz
