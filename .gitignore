@@ -2,6 +2,7 @@
 
 toolboxes/k-wave-toolbox-version-1.4/
 toolboxes/k-wave-toolbox-version-1.4/k-Wave/binaries
+configs/default_paths.yaml
 
 #######################################
 # Ignore backup and fsl_sub log files #

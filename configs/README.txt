@@ -1,0 +1,1 @@
+adjust the default_paths.yaml once according to your system's paths - this file is gitignored, i.e. these paths will not be overwritten when you pull from github.

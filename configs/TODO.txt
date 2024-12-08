@@ -1,4 +1,1 @@
 add complete config yaml? (i.e. where every parameter is mentioned)
-
-check if there is a central "parse config" function
-

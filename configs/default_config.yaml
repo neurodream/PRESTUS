@@ -4,20 +4,6 @@
 
 #------------ This first segment of the config contains parameters mandatory for running a pipeline
 
-# Paths to the data location and SimNIBS environment (please use full paths)
-# Paths to the data location and SimNIBS environment (please use full paths)
-data_path: /home/sleep/nicade/Documents/scans/
-#simnibs_bin_path: /home/neuromod/julkos/SimNIBS/bin
-
-seg_path: /home/sleep/nicade/Documents/scans/segmentation_results/
-
-simnibs_bin_path: /opt/simnibs/4.0.0/simnibs_env/bin/
-# /opt/simnibs/4.0.0/bin/
-
-# Paths to T1 and T2 relative to data_path; all string substitutions will be done using subject_id
-# t1_path_template: sub-%1$03d_orig_T1w.nii.gz 
-# t2_path_template: sub-%1$03d_orig_T2w.nii.gz
-
 # select which medium setup to use: 'water' or 'layered' (a layered medium consists of several layers defined below)
 simulation_medium: layered
 
