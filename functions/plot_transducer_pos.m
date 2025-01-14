@@ -4,17 +4,17 @@ close all; clc;
 
 % Read the data from the Excel file
 T = readtable('data/transducer_pos/position_LUT.xlsx');
-target_L = [T.y_l(T.sbj_ID == sbj_ID) T.x_l(T.sbj_ID == sbj_ID) T.z_l(T.sbj_ID == sbj_ID)];
-target_R = [T.y_r(T.sbj_ID == sbj_ID) T.x_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
+target_L = [T.x_l(T.sbj_ID == sbj_ID) T.y_l(T.sbj_ID == sbj_ID) T.z_l(T.sbj_ID == sbj_ID)];
+target_R = [T.x_r(T.sbj_ID == sbj_ID) T.y_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
 
 % make sure the subject ID match of seg_file and target:
-% parameters.seg_path = 'M:\Documents\scans\segmentation_results';
-% parameters.data_path = 'M:\Documents\scans';
 segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
 filename_segmented = fullfile(segmentation_folder, 'final_tissues.nii.gz');
 
 layers = niftiread(filename_segmented);
 layers_info = niftiinfo(filename_segmented);
+[layers, layers_info] = swapNiftiXY(layers, layers_info);
+
 head = layers > 0;
 
 head = fill_head(head);
@@ -90,7 +90,7 @@ for transducer = parameters.transducers
     else
         color = 'k';
     end
-    get_transducer_voxels_absolute_pos(target([2 1 3]), pos([2 1 3]), head, parameters, transducer.name, color);
+    get_transducer_voxels_absolute_pos(target, pos, head, parameters, transducer.name, color);
 
 end
 
@@ -106,8 +106,8 @@ end
 r = round(5/mean(layers_info.PixelDimensions));
 % Equation of the sphere: (x - px)^2 + (y - py)^2 + (z - pz)^2 <= r^2
 [x, y, z] = ndgrid(1:size(layers,1), 1:size(layers,2), 1:size(layers,3));
-ROItarget_L = (x - target_L(2)).^2 + (y - target_L(1)).^2 + (z - target_L(3)).^2 <= r^2;
-ROItarget_R = (x - target_R(2)).^2 + (y - target_R(1)).^2 + (z - target_R(3)).^2 <= r^2;
+ROItarget_L = (x - target_L(1)).^2 + (y - target_L(2)).^2 + (z - target_L(3)).^2 <= r^2;
+ROItarget_R = (x - target_R(1)).^2 + (y - target_R(2)).^2 + (z - target_R(3)).^2 <= r^2;
 
 ROItarget_L_smooth = smooth3(ROItarget_L, 'box', 5);
 p = patch(isosurface(ROItarget_L_smooth, 0.5)); % Extract and plot outer layer

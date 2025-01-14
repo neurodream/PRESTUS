@@ -17,7 +17,7 @@ parameters = load_parameters('nico_test_double_acoustic_100mm_same_temp0_config.
 
 filepath = fullfile(parameters.data_path, 'sim_outputs');
 
-sbj_IDs = [1 2 8];
+sbj_IDs = [8];
 data = repmat(struct(), 1, length(sbj_IDs));
 
 
@@ -34,7 +34,8 @@ for sbj_ID = sbj_IDs%1:6
     %     filename = sprintf('sub-%03d/sub-%03d_layered_heating_resL--r_R--r_it1_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
     %     load(fullfile(filepath, filename), 'time_status_seq', 'tissue_CEM43', 'tissue_heat');
     % end
-    filename_glob = sprintf('sub-%03d/sub-%03d_layered_heating_resL*--r_R*--r_it5_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
+    % filename_glob = sprintf('sub-%03d/sub-%03d_layered_heating_resL*--r_R*--r_it8_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
+    filename_glob = sprintf('sub-%03d/sub-%03d_layered_heating_resL-r_R-r_it8_heatingtimeline_imprecisionnone.mat', sbj_ID, sbj_ID);
     f = dir(fullfile(filepath, filename_glob));
     % filename = 'sub-008/sub-008_layered_heating_resL-r_R-r_it4_heatingtimeline_debug_imprecisionnone.mat';
     load(fullfile(f.folder, f.name), 'time_status_seq', 'tissue_CEM43', 'tissue_heat');
@@ -53,8 +54,15 @@ for sbj_ID = sbj_IDs%1:6
     
 end
 
+% TD
 figure; hold on;
 for i = 1:length(sbj_IDs)
-    % plot(data(i).time*2, data(i).tissue_heat(3,:)); % TODO: check why times 2 needed!!!
     plot(data(i).time*2, data(i).tissue_CEM43_max); % TODO: check why times 2 needed!!!
 end
+
+% TR
+figure; hold on;
+for i = 1:length(sbj_IDs)
+    plot(data(i).time*2, data(i).tissue_heat(3,:)); % TODO: check why times 2 needed!!!
+end
+ylim([37 39]);

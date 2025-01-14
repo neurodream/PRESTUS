@@ -16,25 +16,26 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 %    4. how many z voxels for under/overshoot correction,
 %     5. target intensity,
 %      6. a string abbreviation which describes more precisely (e.g. the number of iterations, e.g. 'it1'; can also be left blank: '')
-%       7. and if errors in spatial precision are to be simulated as well ('none' for no imprecision, 'transducer', 'target', or 'both')
+%       7. parameters filename (yaml file, but do not add the file extension here)
+%        8. and if errors in spatial precision are to be simulated as well ('none' for no imprecision, 'transducer', 'target', or 'both')
 
-% example:
-% NBM_run(1, 'R', false, 4, 100, 'it5_heatingtimeline', 'none');
-% NBM_run(1, 'R', true,  4, 100, 'it5_heatingtimeline', 'none');
-% NBM_run(2, 'R', false, 4, 100, 'it5_heatingtimeline', 'none');
-% NBM_run(2, 'R', true,  4, 100, 'it5_heatingtimeline', 'none');
-NBM_run(7, 'R', false, 3, 100, 'only_segmentation', 'none');
-% NBM_run(3, 'R', true,  3, 100, 'it5_heatingtimeline', 'none');
-% NBM_run(4, 'R', false, 2, 100, 'it1_FW', 'none');
-% NBM_run(4, 'R', true,  2, 100, 'it1_FW', 'none');
-% NBM_run(5, 'R', false, 2, 100, 'it1_FW', 'none');
-% NBM_run(5, 'R', true,  2, 100, 'it1_FW', 'none');
-% NBM_run(6, 'R', false, 0, 100, 'it1_heatingtimeline', 'none');
-% NBM_run(6, 'R', true,  0, 100, 'it1_FW', 'none');
-% NBM_run(8, 'R', true,  0, 100, 'it2_heatingtimeline', 'none');
-% NBM_run(8, 'R', true,  0, 100, 'it5_heatingtimeline', 'none');
+% NBM_run(1, 'R', false, 4, 100, 'it5_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(1, 'R', true,  4, 100, 'it5_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(2, 'R', false, 4, 100, 'it5_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(2, 'R', true,  4, 100, 'it5_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+  NBM_run(8, 'R', true,  3, 100, 'it11_just_test',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+% NBM_run(8, 'R', false, 3, 100, 'just_6test',          'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(3, 'R', true,  3, 100, 'it5_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(4, 'R', false, 2, 100, 'it1_FW',              'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(4, 'R', true,  2, 100, 'it1_FW',              'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(5, 'R', false, 2, 100, 'it1_FW',              'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(5, 'R', true,  2, 100, 'it1_FW',              'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(6, 'R', false, 0, 100, 'it1_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(6, 'R', true,  0, 100, 'it1_FW',              'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(8, 'R', true,  0, 100, 'it2_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
+% NBM_run(8, 'R', true,  0, 100, 'it5_heatingtimeline', 'nico_test_double_acoustic_75mm_100mm_same_temp0_config', 'none');
 
-% empirical z corrections for the subjects:
+% empirical z corrections for the subjects: (TODO: make this programmatically)
 % subject 1: 4
 % subject 2: 4
 % subject 3: 3

@@ -1,4 +1,4 @@
-function [output_pressure_file, parameters] = single_subject_pipeline(subject_id, parameters)
+function [output_pressure_file, parameters, data] = single_subject_pipeline(subject_id, parameters)
     
     % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
     %                       Single subject pipeline                     %
@@ -91,8 +91,7 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     save(parameters_file, 'parameters')
     
     % Add subject_id to parameters to pass arguments to functions more
-    % easily % TODO why not make config files for each subject already?
-    % positions are subject-specific!
+    % easily
     parameters.subject_id = subject_id;
     
     %% Extra settings needed for better usability
@@ -103,23 +102,30 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     output_pressure_file = fullfile(parameters.output_dir,sprintf('sub-%03d_%s_output_table%s.csv', ...
         subject_id, parameters.simulation_medium, parameters.results_filename_affix));
     
-    % Tries an alternative method to calculate the expected focal distance
-    % if none is entered into the config file
-    % TODO should handle both cases: if expected_focal_distance_mm is
-    % defined outside of transducer, or for each transducer;
+    % Tries an alternative method to calculate the expected focal distance if none is entered into the config file
+    % handles both cases: (1) if expected_focal_distance_mm is defined outside of transducer (for backwards compatibility), 
+    % or (2) for each transducer;
+    % case (1):
+    if isfield(parameters, 'expected_focal_distance_mm')
+        for transducer_idx = 1:numel(parameters.transducers)
+            if ~isfield(parameters.transducers(transducer_idx),'expected_focal_distance_mm') || isempty(parameters.transducers(transducer_idx).expected_focal_distance_mm)
+                parameters.transducers(transducer_idx).expected_focal_distance_mm = parameters.expected_focal_distance_mm;
+            end
+        end
+    end
+    % case (2):
     for transducer_idx = 1:numel(parameters.transducers)
-        if ~isfield(parameters.transducers(transducer_idx),'expected_focal_distance_mm') || isempty(parameters.transducers(transducer_idx).expected_focal_distance_mm) % ~isfield(parameters.transducers(transducer_idx), 'expected_focal_distance_mm')
+        transducer = parameters.transducers(transducer_idx);
+        if ~isfield(transducer,'expected_focal_distance_mm') || isempty(transducer.expected_focal_distance_mm) % ~isfield(parameters.transducers(transducer_idx), 'expected_focal_distance_mm')
             disp('Expected focal distance is not specified, trying to get it from positions on T1 grid')
-            % TODO currently only checks for the first transducer
-            if (~isfield(parameters.transducers(transducer_idx),'pos_t1_grid') || isempty(parameters.transducers(transducer_idx).pos_t1_grid)) || (~isfield(parameters.transducers(transducer_idx),'focus_pos_t1_grid') || isempty(parameters.transducers(transducer_idx).focus_pos_t1_grid)) % ~isfield(parameters.transducers(transducer_idx), 'pos_t1_grid') || ~isfield(parameters.transducers(transducer_idx), 'focus_pos_t1_grid')
+            if (~isfield(transducer,'pos_t1_grid') || isempty(transducer.pos_t1_grid)) || (~isfield(transducer,'focus_pos_t1_grid') || isempty(transducer.focus_pos_t1_grid)) % ~isfield(parameters.transducers(transducer_idx), 'pos_t1_grid') || ~isfield(parameters.transducers(transducer_idx), 'focus_pos_t1_grid')
                 error('Either the transducer position or the focus position on T1 grid are not specified, cannot compute the expected focal distance')
             end
             filename_t1 = dir(fullfile(parameters.data_path, sprintf(parameters.t1_path_template, subject_id)));
             if isempty(filename_t1)
                 error('File does not exist: \r\n%s', filename_t1);
             end
-            % select first match in case multiple are found
-            filename_t1 = fullfile(filename_t1(1).folder, filename_t1(1).name);
+            filename_t1 = fullfile(filename_t1(1).folder, filename_t1(1).name); % select first file match in case multiple are found
             t1_info = niftiinfo(filename_t1);
             t1_grid_step_mm = t1_info.PixelDimensions(1);
             focal_distance_t1 = norm(parameters.transducers(transducer_idx).focus_pos_t1_grid - parameters.transducers(transducer_idx).pos_t1_grid);
@@ -138,9 +144,11 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
         
         % note: only the first transducer-focus pair determines the
-        % rotation/transformation
+        % rotation/transformation; see function align_to_focus_axis_and_scale
         for transducer_idx = 1:numel(parameters.transducers)
-
+            
+            % TODO has the preprocess_brain function to be called for every
+            % transducer?
             [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, ...
             focus_pos_final, t1_image_orig, t1_header, final_transformation_matrix, ...
             inv_final_transformation_matrix] = preprocess_brain(parameters, subject_id, transducer_idx);
@@ -151,7 +159,9 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
             parameters.grid_dims = size(medium_masks);
             parameters.transducers(transducer_idx).trans_pos_final = trans_pos_final;
             parameters.transducers(transducer_idx).focus_pos_final = focus_pos_final;
-
+            % save these to parameters for later free water runs
+            parameters.inv_final_transformation_matrix = inv_final_transformation_matrix;
+            parameters.t1_header = t1_header;
         end
 
     else % In case simulations are not run in a skull of layered tissue, alternative grid dimensions are set up
@@ -167,23 +177,26 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
 
             % Checks whether the transducer location and orientation are set,
             % and uses an arbitrary position if not
+            transducer = parameters.transducers(transducer_idx);
             medium_masks = [];
             segmented_image_cropped = zeros(parameters.grid_dims);
-            if (~isfield(parameters.transducers(transducer_idx),'pos_grid') || isempty(parameters.transducers(transducer_idx).pos_grid)) || (~isfield(parameters.transducers(transducer_idx),'focus_pos_grid') || isempty(parameters.transducers(transducer_idx).focus_pos_grid)) %~isfield(parameters.transducers(transducer_idx), 'pos_grid') || ~isfield(parameters.transducers(transducer_idx), 'focus_pos_grid')
+            if (~isfield(transducer,'pos_grid') || isempty(transducer.pos_grid)) || (~isfield(transducer,'focus_pos_grid') || isempty(transducer.focus_pos_grid)) %~isfield(parameters.transducers(transducer_idx), 'pos_grid') || ~isfield(parameters.transducers(transducer_idx), 'focus_pos_grid')
                 disp('Either grid or focus position is not set, positioning them arbitrarily based on the focal distance')
                 % note that the focus position matters only for the orientation of the transducer
             end
-            if ~isfield(parameters.transducers(transducer_idx),'pos_grid') || isempty(parameters.transducers(transducer_idx).pos_grid) %~isfield(parameters.transducers(transducer_idx), 'pos_grid')
-                trans_pos_final = round([parameters.grid_dims(1:(parameters.n_sim_dims-1))/2 parameters.pml_size+1]); % transducer positioned arbitrarily
+            if ~isfield(transducer,'pos_grid') || isempty(transducer.pos_grid) %~isfield(parameters.transducers(transducer_idx), 'pos_grid')
+                % transducer positioned arbitrarily
+                trans_pos_final = round([parameters.grid_dims(1:(parameters.n_sim_dims-1))/2 parameters.pml_size+1]);
             else
-                trans_pos_final = parameters.transducers(transducer_idx).pos_grid;
+                trans_pos_final = transducer.pos_grid;
             end
-            % TODO probably needs adjustment, looping through transducers
-            if ~isfield(parameters, 'focus_pos_grid')
+            % note: not really useful in case of >= 2 transducers...
+            if ~isfield(transducer, 'focus_pos_grid')
                 focus_pos_final = trans_pos_final;
+                % move the focus position away from transducer only on the last axis
                 focus_pos_final(parameters.n_sim_dims) = round(focus_pos_final(parameters.n_sim_dims) + parameters.transducers(transducer_idx).expected_focal_distance_mm/parameters.grid_step_mm);
             else
-                focus_pos_final = parameters.focus_pos_grid;    
+                focus_pos_final = transducer.focus_pos_grid;    
             end
 
             parameters.transducers(transducer_idx).trans_pos_final = trans_pos_final;
@@ -220,10 +233,6 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     %% SETUP MEDIUM
     % For more documentation, see 'setup_medium'
     disp('Setting up kwave medium...')
-    
-    % % TODO: debug delete!!! test for posthoc water sims!
-    % parameters.simulation_medium = 'water';
-    % medium_masks = [];
 
     if parameters.usepseudoCT == 1
         kwave_medium = setup_medium(parameters, medium_masks, segmented_image_cropped);
@@ -302,152 +311,75 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     
     % Run the acoustic simulations
     % See 'run_simulations' for more documentation
-    % TODO note that changed; make it a parameter whether mat file should
-    % be stored or not
+    % also stores results based on config specs
     if parameters.run_acoustic_sims && confirm_overwriting(filename_sensor_data, parameters) && (parameters.interactive == 0 || confirmation_dlg('Running the simulations will take a long time, are you sure?', 'Yes', 'No'))
         sensor_data = run_simulations(kgrid, kwave_medium, source, sensor, kwave_input_args, parameters);
-        % save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 'inv_final_transformation_matrix', 't1_header', '-v7.3')
+        if ~isfield(parameters, 'acoustic_outputs') || ~isfield(parameters.acoustic_outputs, 'raw') || parameters.acoustic_outputs.raw
+            if strcmp(parameters.simulation_medium, 'water')
+                % posthoc water test (should not be overwritten)
+                % save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 't1_header', '-v7.3')
+            else
+                save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 'inv_final_transformation_matrix', 't1_header', '-v7.3')
+            end
+        end
     else
         disp('Skipping, the file already exists, loading it instead.')
         load(filename_sensor_data, 'sensor_data')
     end
-    
-    % save the nifti files (TODO: make parameter what should be stored)
-    
-    fname_out_isppa = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'intensity', parameters.results_filename_affix));
-    fname_out_p     = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'pressure', parameters.results_filename_affix));
-    fname_out_mi    = fullfile(parameters.output_dir, sprintf('sub-%03d_final_%s%s', subject_id, 'mechanicalindex', parameters.results_filename_affix));
 
-    p = gather(sensor_data.p_max_all);
-    Isppa_map = p.^2 ./ (2 * (kwave_medium.sound_speed .* kwave_medium.density)) * 1e-4;
-    MI_map = (p/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6)); % TODO assumes that source frequency is the same for all transducers
-    
-    % backtransform the data
-    data_isppa = tformarray(Isppa_map, inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
-    data_p     = tformarray(p,         inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
-    data_mi    = tformarray(MI_map,    inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0) ;
-    
-    t1_header.Datatype = 'single';
-    niftiwrite(data_isppa, fname_out_isppa, t1_header, 'Compressed', true);
-    niftiwrite(data_p,     fname_out_p,     t1_header, 'Compressed', true);
-    niftiwrite(data_mi,    fname_out_mi,     t1_header, 'Compressed', true);
-    
+
 
     %% Process results
     disp('Processing the results of acoustic simulations...')
 
+    data = [];
+
     % What is the highest pressure level for every gridpoint
-    data_max = gather(sensor_data.p_max_all); % gather is used since it could be a GPU array
-    max_pressure = max(data_max(:));
+    data.pressure = gather(sensor_data.p_max_all); % gather is used since it could be a GPU array
 
     % Calculates the Isppa for every gridpoint
-    Isppa_map = data_max.^2./(2*(kwave_medium.sound_speed.*kwave_medium.density)).*1e-4;
-    % Calculates the max Isppa
-    max_Isppa = max(Isppa_map(:));
-
+    data.intensity = data.pressure.^2./(2*(kwave_medium.sound_speed.*kwave_medium.density)).*1e-4;
+    
     % Calculates the Mechanical Index for every gridpoint
-    % TODO figure out how to implement different source frequencies if
-    % needed
-    MI_map = (data_max/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6));
+    % TODO figure out how to implement different source frequencies if needed
+    data.mechanicalindex = (data.pressure/10^6)/sqrt((parameters.transducers(1).source_freq_hz/10^6));
 
-    % Creates the foundation for a mask before the exit plane to calculate max values outside of it
-    % TODO make sure the mask makes sense
-    comp_grid_size = size(sensor_data.p_max_all);
-    after_exit_plane_mask = ones(comp_grid_size);
-    for transducer = parameters.transducers
-        after_exit_plane_mask_tr = ones(comp_grid_size);
-        bowl_depth_grid = round((transducer.curv_radius_mm-transducer.dist_to_plane_mm)/parameters.grid_step_mm);
-        % Places the exit plane mask in the grid, adjusted to the amount of dimensions
-        if parameters.n_sim_dims == 3
-            if transducer.trans_pos_final(3) > comp_grid_size(3)/2
-                after_exit_plane_mask_tr(:,:,(transducer.trans_pos_final(parameters.n_sim_dims)-bowl_depth_grid):end) = 0;
-            else
-                after_exit_plane_mask_tr(:,:,1:(transducer.trans_pos_final(parameters.n_sim_dims)+bowl_depth_grid)) = 0;
-            end
-        else
-            if transducer.trans_pos_final(2) > comp_grid_size(2)/2
-                after_exit_plane_mask_tr(:,(transducer.trans_pos_final(parameters.n_sim_dims)-bowl_depth_grid):end) = 0;
-            else
-                after_exit_plane_mask_tr(:,1:(transducer.trans_pos_final(parameters.n_sim_dims)+bowl_depth_grid)) = 0;
-            end
+    % save the nifti files
+    if isfield(parameters, 'acoustic_outputs') && isfield(parameters, 'inv_final_transformation_matrix') && isfield(parameters, 't1_header')
+        acoustic_outputs = parameters.acoustic_outputs;
+        base_fname = char(fullfile(parameters.output_dir, sprintf('sub-%03d_%s_final_', subject_id, parameters.simulation_medium)));
+        parameters.t1_header.Datatype = 'single';
+        
+        if isfield(acoustic_outputs, 'nifti_pressure') && acoustic_outputs.nifti_pressure
+            fname_out = [base_fname, 'pressure', parameters.results_filename_affix];
+            data_backtransformed = tformarray(data.pressure, parameters.inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], parameters.t1_header.ImageSize, [], 0);
+            niftiwrite(data_backtransformed, fname_out, parameters.t1_header, 'Compressed', true);
         end
-        after_exit_plane_mask = double(after_exit_plane_mask & after_exit_plane_mask_tr);
+        
+        if isfield(acoustic_outputs, 'nifti_intensity') && acoustic_outputs.nifti_intensity
+            fname_out = [base_fname, 'intensity', parameters.results_filename_affix];
+            data_backtransformed = tformarray(data.intensity, parameters.inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], parameters.t1_header.ImageSize, [], 0);
+            niftiwrite(data_backtransformed, fname_out, parameters.t1_header, 'Compressed', true);
+        end
+        
+        if isfield(acoustic_outputs, 'nifti_mechanicalindex') && acoustic_outputs.nifti_mechanicalindex
+            fname_out = [base_fname, 'mechanicalindex', parameters.results_filename_affix];
+            data_backtransformed = tformarray(data.mechanicalindex, parameters.inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], parameters.t1_header.ImageSize, [], 0);
+            niftiwrite(data_backtransformed, fname_out, parameters.t1_header, 'Compressed', true);
+        end
+
     end
-
-    % Calculates the X, Y and Z coordinates of the max. intensity
-    [max_Isppa_after_exit_plane, Ix_eplane, Iy_eplane, Iz_eplane] = masked_max_3d(Isppa_map, after_exit_plane_mask);
-
-    % Combines these coordinates into a point of max. intensity in the grid
-    if parameters.n_sim_dims==3
-        max_isppa_eplane_pos = [Ix_eplane, Iy_eplane, Iz_eplane];
-    else 
-        max_isppa_eplane_pos = [Ix_eplane, Iy_eplane];
-    end
-    disp('Final transducer, expected focus, and max ISPPA positions')
-
-    % Calculates the average Isppa within a circle around the target
-    [trans_pos_final', focus_pos_final', max_isppa_eplane_pos']
-    real_focal_distance = norm(max_isppa_eplane_pos-trans_pos_final)*parameters.grid_step_mm;
-    distance_target_real_maximum = norm(max_isppa_eplane_pos-focus_pos_final)*parameters.grid_step_mm;
-    avg_radius = round(parameters.focus_area_radius/parameters.grid_step_mm); %grid
-    avg_isppa_around_target = Isppa_map(...
-        (focus_pos_final(1)-avg_radius):(focus_pos_final(1)+avg_radius),...
-        (focus_pos_final(2)-avg_radius):(focus_pos_final(2)+avg_radius),...
-        (focus_pos_final(3)-avg_radius):(focus_pos_final(3)+avg_radius));
-    avg_isppa_around_target = mean(avg_isppa_around_target(:));
-
-    % Reports the Isppa within the original stimulation target
-    isppa_at_target = Isppa_map(focus_pos_final(1),focus_pos_final(2),focus_pos_final(3));
-
-    % % Creates a logical skull mask and register skull_ids
-    % labels = fieldnames(parameters.layer_labels);
-    % skull_i = find(strcmp(labels, 'skull_cortical'));
-    % trabecular_i = find(strcmp(labels, 'skull_trabecular'));
-    % all_skull_ids = [skull_i, trabecular_i];
-    % skull_mask = ismember(medium_masks,all_skull_ids);
-    % brain_i = find(strcmp(labels, 'brain'));
-    % brain_mask = ismember(medium_masks,brain_i);
-    % skin_i = find(strcmp(labels, 'skin'));
-    % skin_mask = ismember(medium_masks,skin_i);
-
-    % % Overwrites the max Isppa by dividing it up into the max Isppa for
-    % % each layer in case a layered simulation_medium was selected
-    % if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
-    %     [max_Isppa_brain, Ix_brain, Iy_brain, Iz_brain] = masked_max_3d(Isppa_map, brain_mask);
-    %     [min_Isppa_brain] = min(Isppa_map(brain_mask));
-    %     half_max = Isppa_map >= max_Isppa_brain/2 & brain_mask;
-    %     half_max_ISPPA_volume_brain = sum(half_max(:))*(parameters.grid_step_mm^3);
-    %     [max_pressure_brain, Px_brain, Py_brain, Pz_brain] = masked_max_3d(data_max, brain_mask);
-    %     [max_MI_brain, Px_brain, Py_brain, Pz_brain] = masked_max_3d(MI_map, brain_mask);
-    % 
-    %     [max_Isppa_skull, Ix_skull, Iy_skull, Iz_skull] = masked_max_3d(Isppa_map, skull_mask);
-    %     [max_pressure_skull, Px_skull, Py_skull, Pz_skull] = masked_max_3d(data_max, skull_mask);
-    %     [max_MI_skull, Px_skull, Py_skull, Pz_skull] = masked_max_3d(MI_map, skull_mask);
-    % 
-    %     [max_Isppa_skin, Ix_skin, Iy_skin, Iz_skin] = masked_max_3d(Isppa_map, skin_mask);
-    %     [max_pressure_skin, Px_skin, Py_skin, Pz_skin] = masked_max_3d(data_max, skin_mask);
-    %     [max_MI_skin, Px_skin, Py_skin, Pz_skin] = masked_max_3d(MI_map, skin_mask);
-    % 
-    %     highlighted_pos = [Ix_brain, Iy_brain, Iz_brain];
-    %     real_focal_distance = norm(highlighted_pos-trans_pos_final)*parameters.grid_step_mm;
-    % 
-    %     writetable(table(subject_id, max_Isppa, max_Isppa_after_exit_plane, real_focal_distance, max_Isppa_skin, max_Isppa_skull, max_Isppa_brain, max_pressure_skin, max_pressure_skull, max_pressure_brain, max_MI_skin, max_MI_skull, max_MI_brain, Ix_brain, Iy_brain, Iz_brain, trans_pos_final, trans_pos_final, isppa_at_target, avg_isppa_around_target, half_max_ISPPA_volume_brain), output_pressure_file);
-    % else % If no layered tissue was selected, the max Isppa is highlighted on the plane and written in a table.
-    %     max_Isppa = max(Isppa_map(:)); %  Does this step need to be included? already done at line 225.
-    %     highlighted_pos = max_isppa_eplane_pos;
-    %     writetable(table(subject_id, max_Isppa, max_Isppa_after_exit_plane, max_pressure, real_focal_distance, trans_pos_final(1,:), trans_pos_final(2,:), focus_pos_final(1,:), focus_pos_final(2,:), isppa_at_target, avg_isppa_around_target), output_pressure_file);
-    % end
 
     % Plots the Isppa on the segmented image
 
-    % TODO
+    % % TODO rewrite plotting function for more than 1 transducer
     % if parameters.n_sim_dims==3
     %     %options.isppa_color_range = [0.5, max_Isppa_brain];
     %     [~,~,~,~,~,~,~,h]=plot_isppa_over_image(...
-    %         Isppa_map, segmented_image_cropped, source_labels, parameters, ...
+    %         data.intensity, segmented_image_cropped, source_labels, parameters, ...
     %         {'y', focus_pos_final(2)}, trans_pos_final, focus_pos_final, highlighted_pos);
     % else
-    %     [~,~,h]=plot_isppa_over_image_2d(Isppa_map, segmented_image_cropped, source_labels, parameters,  trans_pos_final, focus_pos_final, highlighted_pos);
+    %     [~,~,h]=plot_isppa_over_image_2d(data.intensity, segmented_image_cropped, source_labels, parameters,  trans_pos_final, focus_pos_final, highlighted_pos);
     % end
     % output_plot = fullfile(parameters.output_dir,...
     %     sprintf('sub-%03d_%s_isppa%s.png', ...
@@ -487,10 +419,10 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
                 max_bounds = [];
                 min_bounds = [];
                 % Loop through each transducer
-                for j = 1:length(parameters.transducers)
+                for transducer = parameters.transducers
                     % Calculate bounds for each transducer in the current dimension
-                    max_bound = max(1, -parameters.thermal.sensor_xy_halfsize + parameters.transducers(j).pos_grid(i));
-                    min_bound = min(parameters.grid_dims(i), parameters.thermal.sensor_xy_halfsize + parameters.transducers(j).pos_grid(i));
+                    max_bound = max(1, -parameters.thermal.sensor_xy_halfsize + transducer.pos_grid(i));
+                    min_bound = min(parameters.grid_dims(i), parameters.thermal.sensor_xy_halfsize + transducer.pos_grid(i));
                     % Append bounds to arrays
                     max_bounds = [max_bounds, max_bound];
                     min_bounds = [min_bounds, min_bound];
@@ -510,9 +442,11 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
             [kwaveDiffusion, time_status_seq, maxT, focal_planeT, maxCEM43, focal_planeCEM43, tissue_heat, tissue_CEM43]= ...
                 run_heating_simulations(sensor_data, kgrid, kwave_medium, sensor, source, parameters, trans_pos_final);
             
-            save(filename_heating_data, 'kwaveDiffusion','time_status_seq',...
-                'heating_window_dims','sensor','maxT','focal_planeT','maxCEM43','focal_planeCEM43', ...
-                'tissue_heat', 'tissue_CEM43', '-v7.3');
+            if ~isfield(parameters, 'heating_outputs') || ~isfield(parameters.heating_outputs, 'raw') || parameters.heating_outputs.raw
+                save(filename_heating_data, 'kwaveDiffusion','time_status_seq',...
+                    'heating_window_dims','sensor','maxT','focal_planeT','maxCEM43','focal_planeCEM43', ...
+                    'tissue_heat', 'tissue_CEM43', '-v7.3');
+            end
 
         else 
             disp('Skipping, the file already exists, loading it instead.')
@@ -533,27 +467,27 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
         maxT = gather(maxT);
         CEM43 = gather(maxCEM43);
 
-        % % Creates an output table for temperature readings
-        % output_table = readtable(output_pressure_file);
-        % 
-        % output_table.maxT = max(maxT, [], 'all');
-        % output_table.maxCEM43 = max(CEM43, [], 'all');
-        % % Overwrites the max temperature by dividing it up for each layer
-        % % in case a layered simulation_medium was selected
-        % if contains(parameters.simulation_medium, 'skull') || strcmp(parameters.simulation_medium, 'layered')
-        %     output_table.maxT_brain = masked_max_3d(maxT, brain_mask);
-        %     output_table.maxT_skull = masked_max_3d(maxT, skull_mask); 
-        %     output_table.maxT_skin = masked_max_3d(maxT, skin_mask);
-        %     output_table.riseT_brain = masked_max_3d(maxT, brain_mask)-parameters.thermal.temp_0.brain;
-        %     output_table.riseT_skull = masked_max_3d(maxT, skull_mask)-parameters.thermal.temp_0.skull; 
-        %     output_table.riseT_skin = masked_max_3d(maxT, skin_mask)-parameters.thermal.temp_0.skin;
-        %     output_table.CEM43_brain = masked_max_3d(CEM43, brain_mask);
-        %     output_table.CEM43_skull = masked_max_3d(CEM43, skull_mask); 
-        %     output_table.CEM43_skin = masked_max_3d(CEM43, skin_mask);
-        % end
-        % writetable(output_table, output_pressure_file);
+        % save the nifti files
+        if isfield(parameters, 'heating_outputs')
+            heating_outputs = parameters.heating_outputs;
+            base_fname = char(fullfile(parameters.output_dir, sprintf('sub-%03d_final_', subject_id)));
+            t1_header.Datatype = 'single';
+            
+            if isfield(heating_outputs, 'nifti_temp') && heating_outputs.nifti_temp
+                fname_out = [base_fname, 'temp', parameters.results_filename_affix];
+                data_backtransformed = tformarray(maxT, inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0);
+                niftiwrite(data_backtransformed, fname_out, t1_header, 'Compressed', true);
+            end
+            
+            if isfield(heating_outputs, 'nifti_TD') && heating_outputs.nifti_TD
+                fname_out = [base_fname, 'CEM43', parameters.results_filename_affix];
+                data_backtransformed = tformarray(CEM43, inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], t1_header.ImageSize, [], 0);
+                niftiwrite(data_backtransformed, fname_out, t1_header, 'Compressed', true);
+            end
+    
+        end
 
-        % Creates a visual overlay of the transducer
+        % Creates a visual overlay of the transducer (TODO adjust to newer version)
         [~, source_labels] = transducer_setup(parameters.transducer, trans_pos_final(1,:), focus_pos_final(1,:), ...
                                                     size(segmented_image_cropped), t1_header.PixelDimensions(1));
         if isfield(parameters, 'transducer2')
@@ -561,7 +495,8 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
                                                     size(segmented_image_cropped), t1_header.PixelDimensions(1));
             source_labels = source_labels + source_labels2;
         end
-        % Creates a line graph and a video of the heating effects
+        % Creates a line graph and a video of the heating effects (TODO
+        % replace with own function)
         plot_heating_sims(focal_planeT, time_status_seq, parameters, trans_pos_final(1,:), medium_masks, focal_planeCEM43);
                 
         % Plots the maximum temperature in the segmented brain
@@ -693,8 +628,6 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
     
     %% Runs posthoc water simulations
 
-    % TODO why commented out?
-
     % To check sonication parameters of the transducer in free water
     if isfield(parameters, 'run_posthoc_water_sims') && parameters.run_posthoc_water_sims && ...
             (contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered'))
@@ -706,8 +639,14 @@ function [output_pressure_file, parameters] = single_subject_pipeline(subject_id
         if isfield(new_parameters,'subject_subfolder') && new_parameters.subject_subfolder == 1
             new_parameters.output_dir = fileparts(new_parameters.output_dir);
         end
-        single_subject_pipeline(subject_id, new_parameters);
+        [~, ~, data_FW] = single_subject_pipeline(subject_id, new_parameters);
+        data.pressure_FW = data_FW.pressure;
+        data.intensity_FW = data_FW.intensity;
+        data.mechanicalindex_FW = data_FW.mechanicalindex;
     end
+    
+    postprocessing_quantification_acoustics(subject_id, parameters, medium_masks, output_pressure_file, data);
+    postprocessing_quantification_heating(subject_id, parameters, medium_masks, output_pressure_file, data);
 
     disp('Pipeline finished successfully');
 end

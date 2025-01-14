@@ -25,7 +25,7 @@ for sbj_ID = 8%1:6
     % affix = 'L+z--l_R+z--l_heating_check_400trials';
     % affix = 'L+z--r_R+z--r_heating_check_400trials';
     % affix = 'L+z--r_R+z--r_heating_check_400trials_same_temp0_DC50';
-    affix = 'L*--r_R*--r_it1_heatingtimeline_imprecisionnone';
+    affix = 'L*--r_R*--r_it8_heatingtimeline_imprecisionnone';
     
     data_path = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
 
@@ -56,6 +56,8 @@ for sbj_ID = 8%1:6
     fname_out_heating = strrep(sprintf('sub-%03d_%s_heating%s', sbj_ID, 'layered', affix), '*', '');
     fname_out_TD      = strrep(sprintf('sub-%03d_%s_maxCEM43%s', sbj_ID, 'layered', affix), '*', '');
     
+    parameters.seg_path = '/home/sleep/nicade/Documents/scans/segmentation_results/';
+    parameters.data_path = '/home/sleep/nicade/Documents/scans/';
     [medium_masks, ~, ~, ~, ~, ~, t1_header, final_transformation_matrix, ...
         inv_final_transformation_matrix] = preprocess_brain(parameters, sbj_ID, 1);
     

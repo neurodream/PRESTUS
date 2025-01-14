@@ -16,16 +16,18 @@ parameters = load_parameters('nico_test_double_acoustic_100mm_same_temp0_config.
 
 cd(fullfile(parameters.data_path, 'sim_outputs'));
 
-subj_ID = 1;
-ID_sham   = 'L+z-r_R+z-r_it1_heatingtimeline_imprecisionnone';
-ID_active = 'L+z--r_R+z--r_it1_heatingtimeline_imprecisionnone';
+subj_ID = 8;
+ID_sham   = 'L+z-r_R+z-r_just_6test';%'L+z-r_R+z-r_it8_heatingtimeline_imprecisionnone';
+ID_active = 'L+z--r_R+z--r_just_6test';%'L+z--r_R--r_it8_heatingtimeline_imprecisionnone';
 
-files = dir([sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_sham '*']);
+filename_sham = fullfile(parameters.data_path, 'sim_outputs', [sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_sham '*']);
+files = dir(filename_sham);
 file = files(1);
 load(fullfile(file.folder, file.name));
 parameters_sham = get_simulated_axial_intensity(parameters);
 
-files = dir([sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_active '*']);
+filename_active = fullfile(parameters.data_path, 'sim_outputs', [sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_active '*']);
+files = dir(filename_active);
 file = files(1);
 load(fullfile(file.folder, file.name));
 parameters_active = get_simulated_axial_intensity(parameters);

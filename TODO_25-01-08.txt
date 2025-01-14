@@ -1,0 +1,39 @@
+schedule piloting:
+	- can Selu help? maybe COI?
+	- 
+
+perform piloting:
+	- with 2 transducers
+
+simulations with full intensity:
+	- get full intensity
+	- why mismatch of PRESTUS energy and input energy
+	- check with the new (?) transducer profiles
+
+check if ears are in the way from multiple people
+	- necessary: decision already made that it should work
+	- get MRIs and preprocess
+	- define ear area
+	- more dry neuronav
+	
+questions for document:
+	- does intensity change the axial profile?
+	- where get the phases from from the axial profiles?
+	- intensity units of PRESTUS?
+	- relationship of intensity and dose? why same Isppa intensity irrespective of pulsing protocol?
+	- how do imperfections arise? look in other doc
+
+release TUS work
+	- work on TODOs
+	- do transducer labels ("right", "left") match the actual sides?
+	- sanity checks: why so many plots opened?
+	- SSP assumes that pixel dims of T1 are the same in all 3 dims?
+	- why is rotation necessary? TODO try without...
+	- make posthoc water sims work
+	- exit plane only calculated within last dimension?? not accounting for rotations etc.?
+	- should change the focus position etc. as well
+
+---
+
+where does FW come from? -- somehow add it to the data struct in SSP
+how to run tests?

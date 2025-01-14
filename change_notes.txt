@@ -1,0 +1,8 @@
+change notes:
+
+- for multiple transducers, name field transducers; for one transducer, can stay transducer
+- extra yaml file default_paths, which is gitignored
+- second argument in load_parameters is not for path anymore, but for multiple yaml files (can be many)
+- after_exit_plane_mask is now replaced by the discussed postprocessing markers (see Loop page)
+- focus_pos_final and trans_pos_final are now n*m matrices with n = number of transducers and m = number of dimensions
+- run_heating_simulations outputs tissue-specific heating over time (note: memory-intensive)
