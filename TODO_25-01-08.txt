@@ -1,6 +1,4 @@
-schedule piloting:
-	- can Selu help? maybe COI?
-	- 
+schedule piloting
 
 perform piloting:
 	- with 2 transducers

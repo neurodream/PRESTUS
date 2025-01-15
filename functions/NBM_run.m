@@ -88,7 +88,7 @@ parameters = get_simulated_axial_intensity(parameters);
 % Set the results filename
 parameters.results_filename_affix = ID;
 
-% Loop through each transducer and apply the imprecision variations
+%% Loop through each transducer and apply the imprecision variations
 for i = 1:numel(parameters.transducers)
     % Get current position and focus for the transducer
     t = parameters.transducers(i).pos_t1_grid;
@@ -114,9 +114,9 @@ for i = 1:numel(parameters.transducers)
 end
 
 % Run the pipeline
-single_subject_pipeline_with_slurm(subject_id, parameters, "08:00:00");
+% single_subject_pipeline_with_slurm(subject_id, parameters, "08:00:00");
 % single_subject_pipeline_with_qsub(subject_id, parameters);
-% single_subject_pipeline(subject_id, parameters); % TODO change back or keep commented!!
+single_subject_pipeline(subject_id, parameters); % TODO change back or keep commented!!
 
 % store the parameters for debugging
 save(fullfile(parameters.data_path, 'sim_outputs', [sprintf('sub-%03d/sub-%03d', subject_id, subject_id) '_parameters' ID]))

@@ -12,7 +12,7 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % The parameters of the individual calls are, from left to right:
 % 1. sbj_num, 
 %  2. focus_side (L or R for unilateral, LR for bilateral), 
-%   3. sham or not (true or false), 
+%   3. sham or not (true or false), n
 %    4. how many z voxels for under/overshoot correction,
 %     5. target intensity,
 %      6. a string abbreviation which describes more precisely (e.g. the number of iterations, e.g. 'it1'; can also be left blank: '')

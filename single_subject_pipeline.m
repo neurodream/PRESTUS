@@ -645,8 +645,12 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
         data.mechanicalindex_FW = data_FW.mechanicalindex;
     end
     
-    postprocessing_quantification_acoustics(subject_id, parameters, medium_masks, output_pressure_file, data);
-    postprocessing_quantification_heating(subject_id, parameters, medium_masks, output_pressure_file, data);
+    if contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered')
+        postprocessing_quantification_acoustics(subject_id, parameters, medium_masks, output_pressure_file, data);
+        if isfield(parameters, 'run_heating_sims') && parameters.run_heating_sims 
+            postprocessing_quantification_heating(subject_id, parameters, medium_masks, output_pressure_file, data);
+        end
+    end
 
     disp('Pipeline finished successfully');
 end

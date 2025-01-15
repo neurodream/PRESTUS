@@ -19,13 +19,13 @@ containers = {
 % separately handle FW (considering there are cases where no free water
 % data are available)
 if ismember('pressure_FW', fieldnames(data))
-    containers = [containers; {'pressure_max_FW'}];
+    containers = [containers, {'pressure_max_FW'}];
 end
 if ismember('intensity_FW', fieldnames(data))
-    containers = [containers; {'intensity_max_FW'}];
+    containers = [containers, {'intensity_max_FW'}];
 end
 if ismember('mechanicalindex_FW', fieldnames(data))
-    containers = [containers; {'mechanicalindex_max_FW'}];
+    containers = [containers, {'mechanicalindex_max_FW'}];
 end
 
 [measure_data] = postprocessing_quantification(sub_id, parameters, medium_masks, containers, output_pressure_file, data);
