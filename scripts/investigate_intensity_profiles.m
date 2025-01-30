@@ -9,22 +9,32 @@ addpath('functions');
 addpath(genpath('toolboxes'));
 
 % base config ("hard" params)
-parameters = load_parameters('nico_test_double_acoustic_100mm_same_temp0_config.yaml');
+parameter_fids = {'nico_test_double_acoustic_same_temp0_config', 'IS_L_100mm_R_75mm', 'heating_sim'};
+parameters_fnames = {};
+for i = 1:numel(parameter_fids)
+    fname = parameter_fids{i};
+    parameters_fnames{end+1} = [fname '.yaml'];
+    
+end
+parameters = load_parameters(parameters_fnames{:});
 
 %% 
 % load in the parameter file
 
 cd(fullfile(parameters.data_path, 'sim_outputs'));
 
-subj_ID = 8;
-ID_sham   = 'L+z-r_R+z-r_just_6test';%'L+z-r_R+z-r_it8_heatingtimeline_imprecisionnone';
-ID_active = 'L+z--r_R+z--r_just_6test';%'L+z--r_R--r_it8_heatingtimeline_imprecisionnone';
+subj_ID = 9;
+ID_sham   = 'L+z-r_R+z-r_intensity_check';%'L+z-r_R+z-r_it8_heatingtimeline_imprecisionnone';
+ID_active = 'L+z--r_R+z--r_intensity_check';%'L+z--r_R--r_it8_heatingtimeline_imprecisionnone';
 
 filename_sham = fullfile(parameters.data_path, 'sim_outputs', [sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_sham '*']);
 files = dir(filename_sham);
-file = files(1);
+file = files(1); % note: just the first file (TODO: ensure that last is taken)
 load(fullfile(file.folder, file.name));
+parameters.transducers(1).source_amp = parameters.transducers(1).source_amp/2;
 parameters_sham = get_simulated_axial_intensity(parameters);
+
+
 
 filename_active = fullfile(parameters.data_path, 'sim_outputs', [sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_active '*']);
 files = dir(filename_active);
@@ -39,6 +49,7 @@ plot(parameters_active.transducers(1).axial_position, parameters_active.transduc
 plot(parameters_sham.transducers(1).axial_position, parameters_sham.transducers(1).axial_intensity_sim_FW, 'LineWidth', 2.5);
 xlim([0 150]);
 ylim([0 115]);
+title('left transducer');
 legend('active', 'sham');
 set(gcf, 'Color', 'w');
 exportgraphics(gcf, 'data/transducerL_FW_axial_sbj1.png', 'BackgroundColor', 'white');
@@ -48,6 +59,7 @@ plot(parameters_active.transducers(2).axial_position, parameters_active.transduc
 plot(parameters_sham.transducers(2).axial_position, parameters_sham.transducers(2).axial_intensity_sim_FW, 'LineWidth', 2.5);
 xlim([0 150]);
 ylim([0 115]);
+title('right transducer');
 legend('active', 'sham');
 set(gcf, 'Color', 'w');
 exportgraphics(gcf, 'data/transducerR_FW_axial_sbj1.png', 'BackgroundColor', 'white');

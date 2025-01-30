@@ -85,7 +85,7 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     % along the transducer's axis
     [t1_with_trans_img, ~] = plot_t1_with_transducer(...
         t1_image, round(t1_header.PixelDimensions(1),2), trans_pos_grid, focus_pos_grid, parameters);
-    
+
     h = figure;
     imshow(rot90(t1_with_trans_img));
     title(['T1 with transducer ' transducer.name]);

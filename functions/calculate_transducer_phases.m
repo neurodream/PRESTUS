@@ -1,6 +1,8 @@
 function [parameters, axial_position, i_axial_oneil] = calculate_transducer_phases(parameters, transducer_ind, expected_focal_distance_mm, ROI_width_mm, goal_intensity, sham, desired_function, use_all_phases)
 
 % TODO adjust the velocity to match the intended strength
+% TODO replace ROI_width_mm with config file
+% TODO maybe just return transducer parameters
 
 if nargin < 7
     desired_function = @create_boxcar; % possible functions: create_boxcar create_mexican_hat create_gaussian
@@ -101,91 +103,102 @@ p_axial_oneil = focusedAnnulusONeil( ...
 
 i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*parameters.medium.water.density) .* 1e-4;
 
-% adjust intensity levels to desired intensity
-peaks_list = findpeaks(i_axial_oneil); 
-peak = peaks_list(end);
-adjustment_ratio = max([goal_intensity peak])/min([goal_intensity peak]);
-parameters.transducers(transducer_ind).source_amp = transducer.source_amp*sqrt(adjustment_ratio);
+parameters.transducers(transducer_ind).source_amp = repmat(opt_velocity*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10); % TODO remove the hardcoding of element numbers
 
-% also adjust the intensity so that the sham works correctly
-i_axial_oneil = i_axial_oneil*adjustment_ratio;
+% % adjust intensity levels to desired intensity
+% peaks_list = findpeaks(i_axial_oneil); 
+% peak = peaks_list(end);
+% adjustment_ratio = max([goal_intensity peak])/min([goal_intensity peak]);
+% parameters.transducers(transducer_ind).source_amp = transducer.source_amp*sqrt(adjustment_ratio);
+% 
+% % also adjust the intensity so that the sham works correctly
+% i_axial_oneil = i_axial_oneil*adjustment_ratio;
 
+% TODO debug reenable
 if sham
 
-    % automatic detection of cutoff
-    minima_indices = islocalmin(i_axial_oneil);
-    min_dists = axial_position(minima_indices);
-    % Find the closest value in min_dists that is lower than expected_focal_distance_mm
-    lower_values = min_dists(min_dists < expected_focal_distance_mm);  % Filter values in l that are less than expected focal distance
-    cutoff = max(lower_values);  % Find the maximum of the filtered values
-
-    desired_profile = i_axial_oneil .* single(axial_position < cutoff); % near field
-
-    % store the global maximum of the desired sham profile for later
-    % intensity adjustment
-    peak_desired_sham_profile = max(desired_profile);
-
-    optimize_phases = @(phases_and_velocity) optimization_function( ...
-        phases_and_velocity(1:transducer.n_elements-stop_before), ...
-        parameters, ...
-        phases_and_velocity(transducer.n_elements)*multiply_velocity + add_velocity,...
-        axial_position, ...
-        desired_profile, ...
-        0, ...
-        opt_limits, ...
-        ones(1, numel(axial_position)) ... % weights: keep equal
-        );
-
-    % refresh the optimization function
-    func = optimize_phases;
-
-    % optimize_phases = @(phases_and_velocity) phase_optimization_annulus( ...
-    %     phases_and_velocity(1:transducer.n_elements-1), ...
+    % % automatic detection of cutoff
+    % minima_indices = islocalmin(i_axial_oneil);
+    % min_dists = axial_position(minima_indices);
+    % % Find the closest value in min_dists that is lower than expected_focal_distance_mm
+    % lower_values = min_dists(min_dists < expected_focal_distance_mm);  % Filter values in l that are less than expected focal distance
+    % cutoff = max(lower_values);  % Find the maximum of the filtered values
+    % 
+    % desired_profile = i_axial_oneil .* single(axial_position < cutoff); % near field
+    % 
+    % % store the global maximum of the desired sham profile for later
+    % % intensity adjustment
+    % peak_desired_sham_profile = max(desired_profile);
+    % 
+    % optimize_phases = @(phases_and_velocity) optimization_function( ...
+    %     phases_and_velocity(1:transducer.n_elements-stop_before), ...
     %     parameters, ...
-    %     phases_and_velocity(transducer.n_elements),...
+    %     phases_and_velocity(transducer.n_elements)*multiply_velocity + add_velocity,...
     %     axial_position, ...
-    %     expected_focal_distance_mm ...
+    %     desired_profile, ...
+    %     0, ...
+    %     opt_limits, ...
+    %     ones(1, numel(axial_position)) ... % weights: keep equal
     %     );
-    
-    % rng(100,'twister') % setting seed for consistency
-    
-    % velocity = transducer.source_amp(1)/(parameters.medium.water.density*parameters.medium.water.sound_speed);   % [m/s]
-
-    [opt_phases_and_velocity, ~, ~, ~] = minimize(func, x0, [],[],[],[],lb, ub, [], options);
-    
-    if use_all_phases
-        opt_phases = opt_phases_and_velocity;
-        opt_velocity = 0.15;
-    else
-        opt_phases = [0 opt_phases_and_velocity(1:9)];
-        opt_velocity = opt_phases_and_velocity(end);
-    end
-    
-    parameters.transducers(transducer_ind).source_phase_rad = opt_phases;
-    % TODO set velocity in Pascal
-    
-    p_axial_oneil = focusedAnnulusONeil( ...
-        transducer.curv_radius_mm/1e3, ...
-        [transducer.Elements_ID_mm; transducer.Elements_OD_mm]/1e3, ...
-        repmat(opt_velocity, 1, transducer.n_elements), ...
-        opt_phases, ...
-        transducer.source_freq_hz, ...
-        parameters.medium.water.sound_speed, ...
-        parameters.medium.water.density, ...
-        (axial_position-0.5)*1e-3 ... % before here was ax_pos
-        );
-    
-    i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*parameters.medium.water.density) .* 1e-4;
-    
-    % adjust intensity levels to desired intensity
-    sham_peak = max(i_axial_oneil);
-    adjustment_ratio = max([peak_desired_sham_profile sham_peak])/min([peak_desired_sham_profile sham_peak]);
-    parameters.transducers(transducer_ind).source_amp = transducer.source_amp*sqrt(adjustment_ratio);
-
-    % for the output param
-    i_axial_oneil = i_axial_oneil*adjustment_ratio;
+    % 
+    % % refresh the optimization function
+    % func = optimize_phases;
+    % 
+    % % optimize_phases = @(phases_and_velocity) phase_optimization_annulus( ...
+    % %     phases_and_velocity(1:transducer.n_elements-1), ...
+    % %     parameters, ...
+    % %     phases_and_velocity(transducer.n_elements),...
+    % %     axial_position, ...
+    % %     expected_focal_distance_mm ...
+    % %     );
+    % 
+    % % rng(100,'twister') % setting seed for consistency
+    % 
+    % % velocity = transducer.source_amp(1)/(parameters.medium.water.density*parameters.medium.water.sound_speed);   % [m/s]
+    % 
+    % [opt_phases_and_velocity, ~, ~, ~] = minimize(func, x0, [],[],[],[],lb, ub, [], options);
+    % 
+    % if use_all_phases
+    %     opt_phases = opt_phases_and_velocity;
+    %     opt_velocity = 0.15;
+    % else
+    %     opt_phases = [0 opt_phases_and_velocity(1:9)];
+    %     opt_velocity = opt_phases_and_velocity(end);
+    % end
+    % 
+    % parameters.transducers(transducer_ind).source_phase_rad = opt_phases;
+    % % TODO set velocity in Pascal
+    % 
+    % p_axial_oneil = focusedAnnulusONeil( ...
+    %     transducer.curv_radius_mm/1e3, ...
+    %     [transducer.Elements_ID_mm; transducer.Elements_OD_mm]/1e3, ...
+    %     repmat(opt_velocity, 1, transducer.n_elements), ...
+    %     opt_phases, ...
+    %     transducer.source_freq_hz, ...
+    %     parameters.medium.water.sound_speed, ...
+    %     parameters.medium.water.density, ...
+    %     (axial_position-0.5)*1e-3 ... % before here was ax_pos
+    %     );
+    % 
+    % i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*parameters.medium.water.density) .* 1e-4;
+    % 
+    % parameters.transducers(transducer_ind).source_amp = repmat(opt_velocity*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10); % TODO remove the hardcoding of element numbers
+    % 
+    % % % adjust intensity levels to desired intensity
+    % % sham_peak = max(i_axial_oneil);
+    % % adjustment_ratio = max([peak_desired_sham_profile sham_peak])/min([peak_desired_sham_profile sham_peak]);
+    % % parameters.transducers(transducer_ind).source_amp = transducer.source_amp*sqrt(adjustment_ratio);
+    % % 
+    % % % for the output param
+    % % i_axial_oneil = i_axial_oneil*adjustment_ratio;
 
 end
+
+disp(transducer_ind)
+disp(sham)
+disp(rad2deg(opt_phases));
+disp(opt_velocity*parameters.medium.water.sound_speed*parameters.medium.water.density);
+plot(axial_position, i_axial_oneil);
 
 parameters = rmfield(parameters, 'transducer');
 

@@ -43,7 +43,12 @@ head = fill_head(head);
 
 transformMatrix = layers_info.Transform.T;
 parameters.transform = transformMatrix;
+% parameters.transform =     [0.8957    0.0033   -0.0695         0;
+%                             -0.0027    0.9000    0.0079         0;
+%                             0.0696   -0.0076    0.8957         0;
+%                             -130.0028 -100.1373 -123.8303    1.0000]; % TODO debug delete
 parameters.grid_step_mm = mean([transformMatrix(1,1) transformMatrix(2,2) transformMatrix(3,3)]); % TODO check in Julian's code if valid
+% parameters.grid_step_mm = 0.5;
 
 %% calculate effective targets
 

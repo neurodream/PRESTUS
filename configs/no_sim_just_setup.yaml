@@ -1,0 +1,5 @@
+# Can allow to only run specific components of the pipeline
+run_source_setup: 1 # Should we set up acoustic source? useful to switch off to look at initial segmentation results only
+run_acoustic_sims: 0 # Should we run the acoustic simulations? useful to switch off to look at initial segmentation results only
+run_heating_sims: 0 # Should we run the heating simulations? useful to switch off to look at initial segmentation results only
+run_posthoc_water_sims: 0 # Should we run the simulations in free water with exactly the same parameter? useful for double checking that the true intensity matches the desired one

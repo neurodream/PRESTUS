@@ -24,6 +24,7 @@ skull = layers == 7 | layers == 8;
 transformMatrix = layers_info.Transform.T;
 parameters.transform = transformMatrix;
 parameters.grid_step_mm = mean([transformMatrix(1,1) transformMatrix(2,2) transformMatrix(3,3)]); % TODO check in Julian's code if valid
+% parameters.grid_step_mm = 0.5;
 
 %% create figure with head/skull and targets
 

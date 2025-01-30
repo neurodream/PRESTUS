@@ -317,7 +317,7 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
         if ~isfield(parameters, 'acoustic_outputs') || ~isfield(parameters.acoustic_outputs, 'raw') || parameters.acoustic_outputs.raw
             if strcmp(parameters.simulation_medium, 'water')
                 % posthoc water test (should not be overwritten)
-                % save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 't1_header', '-v7.3')
+                save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', '-v7.3')
             else
                 save(filename_sensor_data, 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 'inv_final_transformation_matrix', 't1_header', '-v7.3')
             end
@@ -487,14 +487,15 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
     
         end
 
-        % Creates a visual overlay of the transducer (TODO adjust to newer version)
-        [~, source_labels] = transducer_setup(parameters.transducer, trans_pos_final(1,:), focus_pos_final(1,:), ...
-                                                    size(segmented_image_cropped), t1_header.PixelDimensions(1));
-        if isfield(parameters, 'transducer2')
-            [~, source_labels2] = transducer_setup(parameters.transducer, trans_pos_final(1,:), focus_pos_final(1,:), ...
-                                                    size(segmented_image_cropped), t1_header.PixelDimensions(1));
-            source_labels = source_labels + source_labels2;
-        end
+        % % Creates a visual overlay of the transducer (TODO adjust to newer version)
+        % [~, source_labels] = transducer_setup(parameters.transducer, trans_pos_final(1,:), focus_pos_final(1,:), ...
+        %                                             size(segmented_image_cropped), t1_header.PixelDimensions(1));
+        % if isfield(parameters, 'transducer2')
+        %     [~, source_labels2] = transducer_setup(parameters.transducer, trans_pos_final(1,:), focus_pos_final(1,:), ...
+        %                                             size(segmented_image_cropped), t1_header.PixelDimensions(1));
+        %     source_labels = source_labels + source_labels2;
+        % end
+        
         % Creates a line graph and a video of the heating effects (TODO
         % replace with own function)
         plot_heating_sims(focal_planeT, time_status_seq, parameters, trans_pos_final(1,:), medium_masks, focal_planeCEM43);
