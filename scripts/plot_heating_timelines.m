@@ -16,6 +16,7 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 parameters = load_parameters('nico_test_double_acoustic_100mm_same_temp0_config.yaml');
 
 filepath = fullfile(parameters.data_path, 'sim_outputs');
+filepath = 'M:\Documents\scans\sim_outputs';
 
 sbj_IDs = [1 2 3 4 5 6];
 data = repmat(struct(), 1, length(sbj_IDs));

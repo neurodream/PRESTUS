@@ -25,12 +25,14 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % NBM_run(8, 'R', false,  3, 100, 'new_sham_test_double100mm',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 % NBM_run(8, 'R', true,  3, 100, 'new_sham_test_double100mm',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 
-NBM_run(4, 'R', false,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-NBM_run(5, 'R', false,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-NBM_run(6, 'R', false,  0, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-NBM_run(4, 'R', true,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-NBM_run(5, 'R', true,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-NBM_run(6, 'R', true,  0, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+NBM_run(1, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+NBM_run(2, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+NBM_run(3, 'R', false, 3, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+% NBM_run(5, 'R', false,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(6, 'R', false,  0, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(4, 'R', true,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(5, 'R', true,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(6, 'R', true,  0, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
 
 % empirical z corrections for the subjects: (TODO: make this programmatically)
 % subject 1: 4

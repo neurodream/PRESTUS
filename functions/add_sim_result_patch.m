@@ -11,7 +11,8 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
     % Add parameters with default values
     % addRequired(p, 'data_folder', @ischar);
     addParameter(p, 'Color', '#7E2F8E', @(x) ischar(x) || (isnumeric(x) && numel(x) == 3));
-    addParameter(p, 'CutoffPerc', 0.999, @isnumeric);
+    addParameter(p, 'CutoffPerc', 0.999, @isnumeric); % (TODO maybe add median option)
+    addParameter(p, 'LowCutoff', 0, @isnumeric); % absolute number; overwrites cutoffperc
     addParameter(p, 'PatchName', 'simPatch', @ischar);
     addParameter(p, 'HeadData', [], @isnumeric); % if provided, then limit to brain
     
@@ -21,13 +22,25 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
     % Retrieve values
     color           = p.Results.Color;
     cutoff_perc     = p.Results.CutoffPerc;
+    cutoff          = p.Results.LowCutoff;
     patch_name      = p.Results.PatchName;
     head_data       = p.Results.HeadData;
 
     % sbj_ID = parameters.subject_subfolder;
     data_folder = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
-    data_file = fullfile(data_folder, sprintf('sub-%03d_final_intensity%s.nii.gz', sbj_ID, parameters.results_filename_affix));
+    data_file = fullfile(data_folder, sprintf('sub-%03d_layered_final_intensity%s.nii.gz', sbj_ID, parameters.results_filename_affix));
+    % % TODO handle if data_file does not exist: create nifti
+    % if ~isfile(data_file)
+    %     base_fname = char(fullfile(parameters.output_dir, sprintf('sub-%03d_%s_final_', subject_id, parameters.simulation_medium)));
+    %     parameters.t1_header.Datatype = 'single';
+    %     fname_out = [base_fname, 'intensity', parameters.results_filename_affix];
+    %     data_backtransformed = tformarray(data.intensity, parameters.inv_final_transformation_matrix, makeresampler('cubic', 'fill'), [1 2 3], [1 2 3], parameters.t1_header.ImageSize, [], 0);
+    %     niftiwrite(data_backtransformed, fname_out, parameters.t1_header, 'Compressed', true);
+    % end
     data = niftiread(data_file);
+    info = niftiinfo(data_file);
+    [data, info] = swapNiftiXY(data, info); % x and y are swapped in nifti, need to be swapped back
+
 
     % fileInfo = dir(fullfile('M:\Documents\repos\PRESTUS_forked\data\sims', data_folder, '*final_isppa_orig_coord.nii.gz'));
     
@@ -48,7 +61,7 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
         within_brain = ~within_brain;
     
         % limit to brain
-        data(~within_brain) = 0;
+        % data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
     end
 
     % plot position of max:
@@ -62,13 +75,15 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
     % add cross
     add_3d_cross(max_pos([2 1 3]), 50, 'black', 3);
 
-    % 
-    % Flatten the 3D matrix
-    flattened_data = data(:);
-    % Sort the flattened values
-    sorted_data = sort(flattened_data);
-    % based on this, compute cutoff
-    cutoff = sorted_data(floor(cutoff_perc*numel(sorted_data)));
+    if cutoff == 0
+        % read out from percentage
+        % Flatten the 3D matrix
+        flattened_data = data(:);
+        % Sort the flattened values
+        sorted_data = sort(flattened_data);
+        % based on this, compute cutoff
+        cutoff = sorted_data(floor(cutoff_perc*numel(sorted_data)));
+    end
     
     thresholds = [0.1 0.2 0.4 0.8 1.6 3.2 6.4 12.8 1000] + 4;
 

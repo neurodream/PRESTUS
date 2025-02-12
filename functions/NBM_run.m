@@ -46,6 +46,9 @@ angles              = [-1 0 0;    1 0 0];
 transd_pos_shift    = [0 0 z_shift;       0 0 z_shift];
 focus_pos_shift     = [0 0 z_shift;       0 0 z_shift];
 
+desired_function = @create_boxcar;
+use_all_phases = true;
+
 % load config(s)
 if iscellstr(parameters_fname)
     parameters_fnames = {};
@@ -75,9 +78,9 @@ for i = 1:numel(parameters.transducers)
 
     % TODO figure out which optimization works best
     if contralateral(i)
-        parameters = calculate_transducer_phases(parameters, i, distance, 15, goal_intensity, sham); % distance + 30 % 28
+        parameters = calculate_transducer_phases(parameters, i, distance, 15, goal_intensity, sham, desired_function, use_all_phases); % distance + 30 % 28
     elseif ~contralateral(i)
-        parameters = calculate_transducer_phases(parameters, i, distance, 15, goal_intensity, sham);
+        parameters = calculate_transducer_phases(parameters, i, distance, 15, goal_intensity, sham, desired_function, use_all_phases);
     end
 
     % store the indended parameters for later debugging:
@@ -86,6 +89,15 @@ for i = 1:numel(parameters.transducers)
     parameters.transducers(i).optim_params.angle = angles(i,:);
     parameters.transducers(i).optim_params.transd_pos_shift = transd_pos_shift(i,:);
     parameters.transducers(i).optim_params.focus_pos_shift = focus_pos_shift(i,:);
+
+    % % TODO debug delete - only for fixMI_it3 and fixMI_it4
+    if i == 1
+        parameters.transducers(i).source_phase_rad = deg2rad([163.85, 148.61, 133.58, 117.97, 101.91, 85.67, 68.80, 51.59, 34.31, 16.72]);
+        parameters.transducers(i).source_amp = repmat(0.15*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10);
+    else
+        parameters.transducers(i).source_phase_rad = deg2rad([232.81, 230.72, 228.65, 226.51, 224.31, 222.10, 219.80, 217.46, 215.11, 212.73]);
+        parameters.transducers(i).source_amp = repmat(0.15*0.75*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10);
+    end
 
 end
 

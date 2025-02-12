@@ -1,0 +1,5 @@
+sbj_ID;suffix;goal;observation
+1;fixMI_it1;check the intensity distribution layered whole field;high near field for right transducer
+1;fixMI_it2;changes if all phases are used?;
+1;fixMI_it3;what if validated phases are used?;pretty strong off-target effects, and also low intensity
+1;fixMI_it4;undershoot correction;

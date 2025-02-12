@@ -1,11 +1,35 @@
-function plot_transducer_pos(parameters, sbj_ID, plot_scalp, plot_skull, plot_intensity, save)
+function plot_transducer_pos(parameters, sbj_ID, save, varargin)
 
-close all; clc;
+% close all;
+% clc;
+
+p = inputParser;
+    
+% Required positional arguments
+addRequired(p, 'parameters', @isstruct);
+addRequired(p, 'sbj_ID', @isnumeric);
+
+% Optional positional argument
+addOptional(p, 'save', false, @islogical);
+
+% Name-value pair arguments
+addParameter(p, 'Structural', 'scalp', @ischar); % 'scalp', 'skull' or 'none'
+addParameter(p, 'Functional', 'pressure', @ischar); % 'pressure', 'intensity', 'mechanicalindex', 'maxtemp', 'thermaldose' or 'none'
+addParameter(p, 'CutoffPerc', 0.999, @isnumeric); % (TODO maybe add median option)
+addParameter(p, 'LowCutoff', 0, @isnumeric);
+
+% Parse input arguments
+parse(p, parameters, sbj_ID, varargin{:});
+
+
 
 % Read the data from the Excel file
 T = readtable('data/transducer_pos/position_LUT.xlsx');
 target_L = [T.x_l(T.sbj_ID == sbj_ID) T.y_l(T.sbj_ID == sbj_ID) T.z_l(T.sbj_ID == sbj_ID)];
 target_R = [T.x_r(T.sbj_ID == sbj_ID) T.y_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
+% TODO not sure why swapping x and y dimensions necessary here
+target_L = target_L([2 1 3]);
+target_R = target_R([2 1 3]);
 
 % make sure the subject ID match of seg_file and target:
 segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
@@ -13,7 +37,7 @@ filename_segmented = fullfile(segmentation_folder, 'final_tissues.nii.gz');
 
 layers = niftiread(filename_segmented);
 layers_info = niftiinfo(filename_segmented);
-[layers, layers_info] = swapNiftiXY(layers, layers_info);
+[layers, layers_info] = swapNiftiXY(layers, layers_info); % x and y seem swapped in nifti, need to be swapped back
 
 head = layers > 0;
 
@@ -29,22 +53,22 @@ parameters.grid_step_mm = mean([transformMatrix(1,1) transformMatrix(2,2) transf
 %% create figure with head/skull and targets
 
 figure;
-if plot_scalp
+if strcmp(p.Results.Structural, 'scalp')
     head_smooth = smooth3(head, 'box', 5);
-    p = patch(isosurface(head_smooth, 0.5)); % Extract and plot outer layer
-    set(p, 'FaceAlpha', 0.25, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
-    set(p, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
-    isonormals(head_smooth, p); % Add normals for proper lighting
+    struct_patch = patch(isosurface(head_smooth, 0.5)); % Extract and plot outer layer
+    set(struct_patch, 'FaceAlpha', 0.25, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
+    set(struct_patch, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
+    isonormals(head_smooth, struct_patch); % Add normals for proper lighting
 end
 
 hold on;
 
-if plot_skull
+if strcmp(p.Results.Structural, 'skull')
     skull_smooth = smooth3(skull, 'box', 5);
-    p_skull = patch(isosurface(skull_smooth, 0.5)); % Extract and plot outer layer
-    set(p_skull, 'FaceAlpha', 0.25, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
-    set(p_skull, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
-    isonormals(skull_smooth, p_skull); % Add normals for proper lighting
+    struct_patch = patch(isosurface(skull_smooth, 0.5)); % Extract and plot outer layer
+    set(struct_patch, 'FaceAlpha', 0.25, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', 'none'); % Customize appearance
+    set(struct_patch, 'AmbientStrength', 0.3, 'DiffuseStrength', 0.5, 'SpecularStrength', 0.2, 'SpecularExponent', 1);
+    isonormals(skull_smooth, struct_patch); % Add normals for proper lighting
 end
 
 
@@ -95,8 +119,8 @@ for transducer = parameters.transducers
 
 end
 
-if plot_intensity
-    add_sim_result_patch(parameters, sbj_ID, 'HeadData', layers, 'CutoffPerc', 0.9995); % 0.9998
+if strcmp(p.Results.Functional, 'intensity') % TODO add others
+    add_sim_result_patch(parameters, sbj_ID, 'HeadData', layers, 'CutoffPerc', p.Results.CutoffPerc, 'LowCutoff', p.Results.LowCutoff); % 0.9998
 end
 
 % plot3(target_L(1), target_L(2), target_L(3), 'k.', 'MarkerSize', 20);
@@ -111,14 +135,14 @@ ROItarget_L = (x - target_L(1)).^2 + (y - target_L(2)).^2 + (z - target_L(3)).^2
 ROItarget_R = (x - target_R(1)).^2 + (y - target_R(2)).^2 + (z - target_R(3)).^2 <= r^2;
 
 ROItarget_L_smooth = smooth3(ROItarget_L, 'box', 5);
-p = patch(isosurface(ROItarget_L_smooth, 0.5)); % Extract and plot outer layer
-set(p, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
-isonormals(ROItarget_L_smooth, p); % Add normals for proper lighting
+target_patch = patch(isosurface(ROItarget_L_smooth, 0.5)); % Extract and plot outer layer
+set(target_patch, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
+isonormals(ROItarget_L_smooth, target_patch); % Add normals for proper lighting
 
 ROItarget_R_smooth = smooth3(ROItarget_R, 'box', 5);
-p = patch(isosurface(ROItarget_R_smooth, 0.5)); % Extract and plot outer layer
-set(p, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
-isonormals(ROItarget_R_smooth, p); % Add normals for proper lighting
+target_patch = patch(isosurface(ROItarget_R_smooth, 0.5)); % Extract and plot outer layer
+set(target_patch, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
+isonormals(ROItarget_R_smooth, target_patch); % Add normals for proper lighting
 
 view(62, 36);
 

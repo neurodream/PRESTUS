@@ -180,6 +180,15 @@ function kwave_medium = setup_medium(parameters, medium_masks, pseudoCT)
         end
     end
 
+    % spatial smoothing
+
+    thermal_conductivity = imgaussfilt3(thermal_conductivity, 1);
+    specific_heat        = imgaussfilt3(specific_heat,        1);
+    sound_speed          = imgaussfilt3(sound_speed,          1);
+    density              = imgaussfilt3(density,              1);
+    alpha_0_true         = imgaussfilt3(alpha_0_true,         1);
+    alpha_power_true     = imgaussfilt3(alpha_power_true,     1);
+
     % Account for actual absorption behaviour in k-Wave, which varies when high
     % absorption is used (see https://doi.org/10.1121/1.4894790).
 
