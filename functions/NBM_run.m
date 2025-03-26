@@ -65,16 +65,24 @@ end
 ID = [ID_part '_' extra_ID_suffix '_imprecision' imprecision_modeling];
 
 
-% transducer "preprocessing" (TODO find better word)
+% % TODO with segmentation only, instead of the below, do this quick fix of -
+% % comment out of segmentation already exists!
+% % transducer placement
+% parameters.transducers(1).pos_t1_grid = [10 10 10];
+% parameters.transducers(1).focus_pos_t1_grid = [50 50 50];  % flip back to normal space
+% parameters.transducers(2).pos_t1_grid = [100 100 100];
+% parameters.transducers(2).focus_pos_t1_grid = [60 60 60];  % flip back to normal space
+
+% transducer "preprocessing" (TODO find better word) (TODO disable when running segmentation only)
 for i = 1:numel(parameters.transducers)
 
     parameters.transducers(i).name = transducer_labels{i};
     [parameters, distance] = get_transducer_pos(parameters, subject_id, dirs{i}, i, angles(i,:), transd_pos_shift(i,:), focus_pos_shift(i,:), contralateral(i));
-    
-    % TODO debug delete
-    if sham
-        distance = 20;
-    end
+
+    % % TODO debug delete
+    % if sham
+    %     distance = 20;
+    % end
 
     % TODO figure out which optimization works best
     if contralateral(i)
@@ -83,6 +91,73 @@ for i = 1:numel(parameters.transducers)
         parameters = calculate_transducer_phases(parameters, i, distance, 15, goal_intensity, sham, desired_function, use_all_phases);
     end
 
+
+
+            % % close all;
+            % 
+            % figure;
+            % 
+            % axial_position = (1:parameters.default_grid_dims(3))*(parameters.grid_step_mm);
+            % axial_position = axial_position';
+            % 
+            % transducer = parameters.transducers(i);
+            % 
+            % dist_to_exit_plane = transducer.curv_radius_mm - transducer.dist_to_plane_mm;
+            % ax_pos = axial_position + dist_to_exit_plane;
+            % 
+            % % TODO readout the intensity correctly
+            % p_axial_oneil = focusedAnnulusONeil( ...
+            %     transducer.curv_radius_mm/1e3, ...
+            %     [transducer.Elements_ID_mm; transducer.Elements_OD_mm]/1e3, ...
+            %     transducer.source_amp/(parameters.medium.water.density*parameters.medium.water.sound_speed), ...
+            %     transducer.source_phase_rad, ...
+            %     transducer.source_freq_hz, ...
+            %     parameters.medium.water.sound_speed, ...
+            %     parameters.medium.water.density, ...
+            %     (ax_pos-0.5)*1e-3 ...
+            %     );
+            % 
+            % i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*parameters.medium.water.density) .* 1e-4;
+            % 
+            % plot(axial_position, i_axial_oneil)
+            % % ylim([0 100])
+
+
+            % figure;
+            % 
+            % axial_position = (1:parameters.default_grid_dims(3))*(parameters.grid_step_mm);
+            % axial_position = axial_position';
+            % 
+            % transducer = parameters.transducers(2);
+            % 
+            %     dist_to_exit_plane = transducer.curv_radius_mm - transducer.dist_to_plane_mm;
+            %     ax_pos = axial_position + dist_to_exit_plane;
+            % 
+            %     opt_limits = [ax_pos(2,1), ax_pos(end,1)];
+            % 
+            %     % TODO readout the intensity correctly
+            %     p_axial_oneil = focusedAnnulusONeil( ...
+            %         transducer.curv_radius_mm/1e3, ...
+            %         [transducer.Elements_ID_mm; transducer.Elements_OD_mm]/1e3, ...
+            %         transducer.source_amp/(parameters.medium.water.density*parameters.medium.water.sound_speed), ...
+            %         transducer.source_phase_rad, ...
+            %         transducer.source_freq_hz, ...
+            %         parameters.medium.water.sound_speed, ...
+            %         parameters.medium.water.density, ...
+            %         (ax_pos-0.5)*1e-3 ...
+            %         );
+            % 
+            %     i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*parameters.medium.water.density) .* 1e-4;
+            % 
+            % plot(axial_position, i_axial_oneil)
+            % % ylim([0 100])
+
+
+
+
+
+
+
     % store the indended parameters for later debugging:
     parameters.transducers(i).optim_params = [];
     parameters.transducers(i).optim_params.focal_distance_mm = distance;
@@ -90,16 +165,8 @@ for i = 1:numel(parameters.transducers)
     parameters.transducers(i).optim_params.transd_pos_shift = transd_pos_shift(i,:);
     parameters.transducers(i).optim_params.focus_pos_shift = focus_pos_shift(i,:);
 
-    % % TODO debug delete - only for fixMI_it3 and fixMI_it4
-    if i == 1
-        parameters.transducers(i).source_phase_rad = deg2rad([163.85, 148.61, 133.58, 117.97, 101.91, 85.67, 68.80, 51.59, 34.31, 16.72]);
-        parameters.transducers(i).source_amp = repmat(0.15*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10);
-    else
-        parameters.transducers(i).source_phase_rad = deg2rad([232.81, 230.72, 228.65, 226.51, 224.31, 222.10, 219.80, 217.46, 215.11, 212.73]);
-        parameters.transducers(i).source_amp = repmat(0.15*0.75*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10);
-    end
-
 end
+
 
 % % TODO debug check the visuals
 % plot_transducer_pos(parameters, subject_id, true, false, false, false)
@@ -135,6 +202,9 @@ for i = 1:numel(parameters.transducers)
     parameters.transducers(i).focus_pos_t1_grid = f + vf;
 end
 
+% TODO DELETE!!!! just for iteration 11: check acoustic sims of traveling
+% wave
+parameters.transducers(1).source_amp = zeros(1,10);
 
 
 

@@ -12,7 +12,7 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
     % addRequired(p, 'data_folder', @ischar);
     addParameter(p, 'Color', '#7E2F8E', @(x) ischar(x) || (isnumeric(x) && numel(x) == 3));
     addParameter(p, 'CutoffPerc', 0.999, @isnumeric); % (TODO maybe add median option)
-    addParameter(p, 'LowCutoff', 0, @isnumeric); % absolute number; overwrites cutoffperc
+    addParameter(p, 'LowCutoff', 0, @isnumeric); % absolute number; overwrites cutoffperc if > 0
     addParameter(p, 'PatchName', 'simPatch', @ischar);
     addParameter(p, 'HeadData', [], @isnumeric); % if provided, then limit to brain
     
@@ -61,7 +61,7 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
         within_brain = ~within_brain;
     
         % limit to brain
-        % data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
+        data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
     end
 
     % plot position of max:

@@ -16,7 +16,7 @@ addOptional(p, 'save', false, @islogical);
 addParameter(p, 'Structural', 'scalp', @ischar); % 'scalp', 'skull' or 'none'
 addParameter(p, 'Functional', 'pressure', @ischar); % 'pressure', 'intensity', 'mechanicalindex', 'maxtemp', 'thermaldose' or 'none'
 addParameter(p, 'CutoffPerc', 0.999, @isnumeric); % (TODO maybe add median option)
-addParameter(p, 'LowCutoff', 0, @isnumeric);
+addParameter(p, 'LowCutoff', 0, @isnumeric); % absolute number; overwrites CutoffPerc if > 0
 
 % Parse input arguments
 parse(p, parameters, sbj_ID, varargin{:});

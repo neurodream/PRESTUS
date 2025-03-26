@@ -1,5 +1,14 @@
-sbj_ID;suffix;goal;observation
-1;fixMI_it1;check the intensity distribution layered whole field;high near field for right transducer
-1;fixMI_it2;changes if all phases are used?;
+sbj_ID;suffix;goal;observation,
+1;fixMI_it1;check the intensity distribution layered whole field;high near field for right transducer,
+1;fixMI_it2;changes if all phases are used?;,
 1;fixMI_it3;what if validated phases are used?;pretty strong off-target effects, and also low intensity
-1;fixMI_it4;undershoot correction;
+1;fixMI_it4;undershoot correction;,
+7;identifyUndershoot_it1;;,
+8;identifyUndershoot_it1;;,
+9;identifyUndershoot_it1;;,
+5;fixMI_it5;back to manually optimized phases; peak intensity differs between transducers,
+5;fixMI_it6;applied formula to fix peak intensity differences;second transducer extremely high values after second loop it,
+;fixMI_it7;??? TODO recollect;
+;fixMI_it8;??? TODO recollect;
+;fixMI_it9;adapt transducer output intensity (? check if correct, this is just recollection);TODO check intensity at target
+1;fixMI_it10;

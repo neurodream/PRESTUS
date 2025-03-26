@@ -23,7 +23,7 @@ data_path = parameters.data_path;
 seg_path = parameters.seg_path;
 
 sub_ids = [1];
-iterations = [3 4];
+iterations = [10];
 found_iterations = [];
 
 folders = dir(fullfile(data_path, 'sim_outputs', 'sub-*')); % change back
@@ -31,7 +31,7 @@ folders = folders(~ismember({folders.name}, {'.', '..'})); % TODO ? necessary?
 for i = 1:numel(folders)
     sub_id = sscanf(folders(i).name, 'sub-%d');
     if ismember(sub_id, sub_ids)
-        files = dir(fullfile(data_path, 'sim_outputs', folders(i).name, '*parameters*it*'));
+        files = dir(fullfile(data_path, 'sim_outputs', folders(i).name, '*parameters*--*it*'));
 
         % if numel(files) > 2
         %     files = files(~contains({files.name}, 'parallel'));
@@ -47,7 +47,7 @@ for i = 1:numel(folders)
                     parameters = parameters.parameters;
                     parameters.data_path = data_path;
                     parameters.seg_path = seg_path;
-                    plot_transducer_pos(parameters, sub_id, save, 'Functional', 'intensity', 'LowCutoff', 3);
+                    plot_transducer_pos(parameters, sub_id, save, 'Functional', 'intensity', 'CutoffPerc', 0.9997);%'LowCutoff', 15);
                     title(['sub' num2str(sub_id) ', it' num2str(iteration)]);
                     found_iterations(end+1) = iteration;
                 end

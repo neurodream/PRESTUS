@@ -73,8 +73,9 @@ parameters.transducers(transd_ind).focus_pos_t1_grid = round(target);  % flip ba
 
 parameters = rmfield(parameters, 'transducer');
 
-% TODO careful: assuming no other figures/important command window
-% information is open
-clc; close all;
+% % TODO careful: assuming no other figures/important command window
+% % information is open
+% clc; close all;
+close(gcf);
 
 end

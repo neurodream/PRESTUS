@@ -19,28 +19,38 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 %       7. parameters filename (yaml file, but do not add the file extension here)
 %        8. and if errors in spatial precision are to be simulated as well ('none' for no imprecision, 'transducer', 'target', or 'both')
 
-% no sham - active
-% NBM_run(9, 'R', false,  3, 100, 'intensity_check',       {'nico_test_double_acoustic_same_temp0_config', 'IS_L_100mm_R_75mm', 'no_sim_just_setup'}, 'none');
-% sham - active
-% NBM_run(8, 'R', false,  3, 100, 'new_sham_test_double100mm',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-% NBM_run(8, 'R', true,  3, 100, 'new_sham_test_double100mm',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+% % possible configs:
+% nico_test_double_acoustic_same_temp0_config
+% acoustic_sim
+% heating_sim
+% no_sim_just_setup
+% IS_double_75mm
+% IS_double_100mm
+% IS_L_100mm_R_75mm
+% debug
 
-NBM_run(1, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-NBM_run(2, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-NBM_run(3, 'R', false, 3, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-% NBM_run(5, 'R', false,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-% NBM_run(6, 'R', false,  0, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-% NBM_run(4, 'R', true,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-% NBM_run(5, 'R', true,  2, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-% NBM_run(6, 'R', true,  0, 100, 'it15_heatingtimeline',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+
+% NBM_run( 5, 'R', false, 2, 60, 'checkOffpeaks_it7',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+% NBM_run( 8, 'R', false, 1, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+% NBM_run(10, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+
+
+NBM_run( 1, 'R', true,  4, 60, 'fixMI_it11',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+NBM_run( 1, 'R', false, 4, 60, 'fixMI_it11',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+
+
 
 % empirical z corrections for the subjects: (TODO: make this programmatically)
-% subject 1: 4
-% subject 2: 4
-% subject 3: 3
-% subject 4: 2
-% subject 5: 2
-% subject 6: 0
+% subject 1:  4
+% subject 2:  4
+% subject 3:  3
+% subject 4:  2
+% subject 5:  2
+% subject 6:  0
+% subject 7:  4
+% subject 8:  1
+% subject 9:  - (error because no T2) 
+% subject 10: 4
 
 % TODO add to single_subject_pipeline, but careful: assumes a stored nifti
 % file

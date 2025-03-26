@@ -9,7 +9,7 @@ function [transducer_voxels] = get_transducer_voxels_absolute_pos(target, trans_
         disp('WARNING!! transducer within skin');
     end
 
-    % plot
+    % plot (TODO counterintuitive that plotting is in a "get" function
     line = plot3( ...
         [target(1), trans_pos(1)], [target(2), trans_pos(2)], [target(3), trans_pos(3)], ...
         'Color', transducer_color, 'LineWidth', 4); %

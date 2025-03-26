@@ -188,10 +188,10 @@ function add_transducer_shape(pos, target, varargin)
     if strcmp(target_type, 'sphere')
         target_patch = plot_sphere(5, target);
     elseif strcmp(target_type, 'line')
-        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], color, 'LineWidth', 2);
+        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], [color, 0.3], 'LineWidth', 1);
     elseif strcmp(target_type, 'both')
         target_patch = plot_sphere(5, target);
-        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], color, 'LineWidth', 2);
+        line = plot3([target(1) pos(1)], [target(2) pos(2)], [target(3) pos(3)], [color, 0.3], 'LineWidth', 1);
     end
 
     %% Set patch properties
