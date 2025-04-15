@@ -3,6 +3,7 @@ function [data_isppa, data_p, data_mi] = acoustic_mat_to_nifti(sbj_id, identifie
 fname_in = sprintf('sub-%03d_%s_results%s.mat', sbj_id, 'layered', identifier);
 fname_out_isppa = sprintf('sub-%03d_%s_isppa%s', sbj_id, 'layered', identifier);
 fname_out_p = sprintf('sub-%03d_%s_pressure%s', sbj_id, 'layered', identifier);
+fname_out_mi = sprintf('sub-%03d_%s_mechanical_index%s', sbj_id, 'layered', identifier);
 
 disp('loading file, might take a few moments...');
 load(fullfile(filepath, fname_in), 'parameters', 'sensor_data', 'kwave_medium', 't1_header', 'inv_final_transformation_matrix');
@@ -21,4 +22,5 @@ if store_nifti
     t1_header.Datatype = 'single';
     niftiwrite(data_isppa, fullfile(filepath, fname_out_isppa), t1_header, 'Compressed', true);
     niftiwrite(data_p,     fullfile(filepath, fname_out_p),     t1_header, 'Compressed', true);
+    niftiwrite(data_mi,     fullfile(filepath, fname_out_mi),     t1_header, 'Compressed', true);
 end
