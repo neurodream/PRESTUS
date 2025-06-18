@@ -76,7 +76,7 @@ function run_segmentation(data_path, subject_id, filename_t1, filename_t2, param
         elseif strcmp(parameters.submit_medium, 'slurm')
             % Create a temporary SLURM batch script file
             temp_slurm_file = tempname(log_dir);
-            job_name = ['simnibs-', subj_id_string];
+            job_name = [subj_id_string];
             fid = fopen([temp_slurm_file '.sh'], 'w+');
             fprintf(fid, '#!/bin/bash\n');
             fprintf(fid, '#SBATCH --job-name=%s\n', job_name);

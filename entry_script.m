@@ -14,7 +14,7 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 %  2. focus_side (L or R for unilateral, LR for bilateral), 
 %   3. sham or not (true or false), n
 %    4. how many z voxels for under/overshoot correction,
-%     5. target intensity,
+%     5. target intensity (unit?),
 %      6. a string abbreviation which describes more precisely (e.g. the number of iterations, e.g. 'it1'; can also be left blank: '')
 %       7. parameters filename (yaml file, but do not add the file extension here)
 %        8. and if errors in spatial precision are to be simulated as well ('none' for no imprecision, 'transducer', 'target', or 'both')
@@ -35,9 +35,19 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % NBM_run(10, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 
 
-NBM_run( 1, 'R', true,  4, 60, 'fixMI_it11',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-NBM_run( 1, 'R', false, 4, 60, 'fixMI_it11',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-
+% NBM_run(7, 'R', false, 0, 60, 'pre-pilot',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+NBM_run(7, 'R', false, 4, 50, 'pre-pilot_it2',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(102, 'R', false, 4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(103, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(104, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(105, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(106, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(107, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(108, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(109, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(110, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(111, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
+% NBM_run(112, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
 
 
 % empirical z corrections for the subjects: (TODO: make this programmatically)

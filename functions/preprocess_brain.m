@@ -32,6 +32,7 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
     % Imports the localite location data in case this is enabled in the
     % config file
     files_to_check = ["filename_t1", "filename_t2"];
+    files_to_check = ["filename_t1"];
     if isfield(parameters,'transducer_from_localite') && parameters.transducer_from_localite
         localite_file = fullfile(parameters.data_path, sprintf(parameters.localite_instr_file_template, subject_id));
         files_to_check = [files_to_check, "localite_file"];
@@ -83,17 +84,17 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
 
     % Creates and exports an unprocessed T1 slice that is oriented 
     % along the transducer's axis
-    [t1_with_trans_img, ~] = plot_t1_with_transducer(...
-        t1_image, round(t1_header.PixelDimensions(1),2), trans_pos_grid, focus_pos_grid, parameters);
-
-    h = figure;
-    imshow(rot90(t1_with_trans_img));
-    title(['T1 with transducer ' transducer.name]);
-    output_plot_filename = fullfile(parameters.debug_dir, ...
-        sprintf('sub-%03d_t1_with_transducer_before_smoothing_and_cropping_%s%s.png', ...
-        subject_id, string(transducer.name), parameters.results_filename_affix));
-    saveas(h, string(output_plot_filename), 'png')
-    close(h); clear t1_with_trans_img;
+    % [t1_with_trans_img, ~] = plot_t1_with_transducer(...
+    %     t1_image, round(t1_header.PixelDimensions(1),2), trans_pos_grid, focus_pos_grid, parameters);
+    % 
+    % h = figure;
+    % imshow(rot90(t1_with_trans_img));
+    % title(['T1 with transducer ' transducer.name]);
+    % output_plot_filename = fullfile(parameters.debug_dir, ...
+    %     sprintf('sub-%03d_t1_with_transducer_before_smoothing_and_cropping_%s%s.png', ...
+    %     subject_id, string(transducer.name), parameters.results_filename_affix));
+    % saveas(h, string(output_plot_filename), 'png')
+    % close(h); clear t1_with_trans_img;
     
     %% SEGMENTATION using SimNIBS
 
@@ -114,7 +115,8 @@ function [medium_masks, segmented_image_cropped, skull_edge, trans_pos_final, fo
             warning("SimNibs integration not supported when requesting pseudoCT. Please make sure you have run SimNibs and have created a pseudoCT.")
         end
         if parameters.interactive == 0 || confirmation_dlg('This will run SEGMENTATION WITH SIMNIBS that takes a long time, are you sure?', 'Yes', 'No')
-            run_segmentation(parameters.data_path, subject_id, filename_t1, filename_t2, parameters);
+            % run_segmentation(parameters.data_path, subject_id, filename_t1, filename_t2, parameters);
+            run_segmentation(parameters.data_path, subject_id, filename_t1, [], parameters);
             %fprintf('\nThe script will continue with other subjects in the meanwhile...\n')
             medium_masks = [];
             segmented_image_cropped = [];

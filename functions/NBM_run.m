@@ -46,7 +46,7 @@ angles              = [-1 0 0;    1 0 0];
 transd_pos_shift    = [0 0 z_shift;       0 0 z_shift];
 focus_pos_shift     = [0 0 z_shift;       0 0 z_shift];
 
-desired_function = @create_boxcar;
+desired_function = @create_boxcar; % TODO back to established profiles
 use_all_phases = true;
 
 % load config(s)
@@ -78,6 +78,7 @@ for i = 1:numel(parameters.transducers)
 
     parameters.transducers(i).name = transducer_labels{i};
     [parameters, distance] = get_transducer_pos(parameters, subject_id, dirs{i}, i, angles(i,:), transd_pos_shift(i,:), focus_pos_shift(i,:), contralateral(i));
+    disp(distance);
 
     % % TODO debug delete
     % if sham
@@ -210,7 +211,7 @@ parameters.transducers(1).source_amp = zeros(1,10);
 
 
 % Run the pipeline
-single_subject_pipeline_with_slurm(subject_id, parameters, "08:00:00");
+single_subject_pipeline_with_slurm(subject_id, parameters, "08:00:00", 60);
 % single_subject_pipeline_with_qsub(subject_id, parameters);
 % single_subject_pipeline(subject_id, parameters); % TODO change back or keep commented!!
 

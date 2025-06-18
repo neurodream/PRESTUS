@@ -185,7 +185,7 @@ skull_smooth_threshold: 0.35 # (higher threshold means thinner mask, lower thres
 other_smooth_threshold: 0.5 # (higher threshold means thinner mask, lower threshold means thicker mask)
 
 # To what extent the computational grid can be expanded in order to get lower prime numbers to (potentially) speed up computations
-prime_factor_max_grid_expansion: 40
+prime_factor_max_grid_expansion: 200 # 40
 
 # Select which k-Wave code to run (see 'run_simulations' for more documentation)
 #   MATLAB CPU code 'matlab_cpu'
@@ -198,7 +198,7 @@ code_type: matlab_gpu
 # Only use this if you are using the Donders HPC
 # If not, you would have to do some things by hand (currently it only affects SimNIBS segmentation)
 using_donders_hpc: 1
-submit_medium: 'qsub'
+submit_medium: 'slurm'
 
 # Segmentation software (current options are 'headreco' and 'charm')
 segmentation_software: charm

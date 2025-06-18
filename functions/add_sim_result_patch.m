@@ -61,7 +61,7 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
         within_brain = ~within_brain;
     
         % limit to brain
-        data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
+        % data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
     end
 
     % plot position of max:
