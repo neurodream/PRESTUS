@@ -54,6 +54,7 @@
    % Debugging info for non-interactive simulations on the Donders cluster
    medium = rmfield(medium,'thermal_conductivity');
    medium = rmfield(medium,'specific_heat');
+   medium = rmfield(medium,'perfusion_coeff');
 
    % Runs simulations on the CPU only in 3 or 2 dimensions
    if parameters.n_sim_dims == 3

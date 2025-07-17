@@ -37,6 +37,14 @@ clear alpha_np p;
 
 % split temp_0 off from kWave_medium
 kwave_medium = rmfield(kwave_medium, 'temp_0');
+kwave_medium = rmfield(kwave_medium, 'absorption_fraction');
+
+% if perfusion was specified, implement it by specifying blood temperature
+if ~all(isnan(kwave_medium.perfusion_coeff))
+    kwave_medium.blood_ambient_temperature = 37; % [degC]
+else
+    kwave_medium = rmfield(kwave_medium, 'perfusion_coeff');
+end
 
 % create kWaveDiffusion object
 if isfield(parameters.thermal,'record_t_at_every_step') && ~parameters.thermal.record_t_at_every_step 
@@ -114,6 +122,7 @@ for tissue_ID = 1:length(tissues)
     tissue_soundspeed = parameters.medium.(tissue).sound_speed;
     tissue_labels(kwave_medium.sound_speed == tissue_soundspeed) = tissue_ID;
 end
+
 
 % % old approach to have cool-off period
 % time_status_seq = struct('status', {'off'}, 'time', {0}, 'step', {0}, 'recorded', {1});

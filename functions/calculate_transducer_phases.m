@@ -106,45 +106,45 @@ i_axial_oneil = p_axial_oneil.^2/(2*parameters.medium.water.sound_speed*paramete
 parameters.transducers(transducer_ind).source_amp = repmat(opt_velocity*parameters.medium.water.sound_speed*parameters.medium.water.density, 1, 10); % TODO remove the hardcoding of element numbers
 
 
-% TODO run this only when validated phases should be used;
-% should be read out if desired 
-
-            if transducer_ind == 1
-                parameters.transducers(1).source_phase_rad = deg2rad([163.85, 148.61, 133.58, 117.97, 101.91, 85.67, 68.80, 51.59, 34.31, 16.72]);
-                parameters.transducers(1).source_amp = repmat(350000, 1, 10);
-            else
-                parameters.transducers(2).source_phase_rad = deg2rad([232.81, 230.72, 228.65, 226.51, 224.31, 222.10, 219.80, 217.46, 215.11, 212.73]);
-                parameters.transducers(2).source_amp = repmat(250000, 1, 10);
-            end
-
-            parameters = get_simulated_axial_intensity(parameters);
-
-            transducer = parameters.transducers(transducer_ind);
-
-            i_axial_oneil = transducer.axial_intensity_sim_FW;
-
-            lb = zeros(1,transducer.n_elements);
-            if use_all_phases
-                stop_before = 0;
-                multiply_velocity = 0;
-                add_velocity = 0.15;
-                optimization_function = @phase_optimization_annulus_full_curve_all_elements;
-                ub = 2*pi*ones(1,transducer.n_elements);
-                x0 = randi(360, [1 transducer.n_elements])/180*pi;
-            else
-                stop_before = 1;
-                multiply_velocity = 1;
-                add_velocity = 0;
-                optimization_function = @phase_optimization_annulus_full_curve;
-                ub = [2*pi*ones(1,transducer.n_elements - 1) 0.2];
-                x0 = [randi(360, [1 transducer.n_elements - 1])/180*pi 0.15];
-            end
-            options = setoptimoptions( ...
-                'popsize',1000, ...
-                'FinDiffType', 'central', ...
-                'MaxFunEvals', 1e7, ...
-                'MaxIter', 1e6 ...
-                );
+% % TODO run this only when validated phases should be used;
+% % should be read out if desired 
+% 
+%             if transducer_ind == 1
+%                 parameters.transducers(1).source_phase_rad = deg2rad([163.85, 148.61, 133.58, 117.97, 101.91, 85.67, 68.80, 51.59, 34.31, 16.72]);
+%                 parameters.transducers(1).source_amp = repmat(350000, 1, 10);
+%             else
+%                 parameters.transducers(2).source_phase_rad = deg2rad([232.81, 230.72, 228.65, 226.51, 224.31, 222.10, 219.80, 217.46, 215.11, 212.73]);
+%                 parameters.transducers(2).source_amp = repmat(250000, 1, 10);
+%             end
+% 
+%             parameters = get_simulated_axial_intensity(parameters);
+% 
+%             transducer = parameters.transducers(transducer_ind);
+% 
+%             i_axial_oneil = transducer.axial_intensity_sim_FW;
+% 
+%             lb = zeros(1,transducer.n_elements);
+%             if use_all_phases
+%                 stop_before = 0;
+%                 multiply_velocity = 0;
+%                 add_velocity = 0.15;
+%                 optimization_function = @phase_optimization_annulus_full_curve_all_elements;
+%                 ub = 2*pi*ones(1,transducer.n_elements);
+%                 x0 = randi(360, [1 transducer.n_elements])/180*pi;
+%             else
+%                 stop_before = 1;
+%                 multiply_velocity = 1;
+%                 add_velocity = 0;
+%                 optimization_function = @phase_optimization_annulus_full_curve;
+%                 ub = [2*pi*ones(1,transducer.n_elements - 1) 0.2];
+%                 x0 = [randi(360, [1 transducer.n_elements - 1])/180*pi 0.15];
+%             end
+%             options = setoptimoptions( ...
+%                 'popsize',1000, ...
+%                 'FinDiffType', 'central', ...
+%                 'MaxFunEvals', 1e7, ...
+%                 'MaxIter', 1e6 ...
+%                 );
 
 
 % adjust intensity levels to desired intensity
@@ -209,7 +209,7 @@ peak = peaks_list(end);
 % attempt to robustly exclude "fake peaks" in the far field with super low
 % intensity (TODO check if really robust)
 if numel(peaks_list) > 1
-    if peaks_list(end-1) > peaks_list(end)*10
+    if peaks_list(end-1) > peaks_list(end)*4
         peak = peaks_list(end-1);
     end
 end

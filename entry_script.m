@@ -34,9 +34,16 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % NBM_run( 8, 'R', false, 1, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 % NBM_run(10, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 
+load('../../scans/sim_outputs/sub-009/sub-009_parametersL--r_R--r_pre-pilot_it14_imprecisionnone.mat', 'parameters');
 
-% NBM_run(7, 'R', false, 0, 60, 'pre-pilot',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-NBM_run(7, 'R', false, 4, 50, 'pre-pilot_it2',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 0], 25, 'pre-pilot_it19',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 0], 15, 'pre-pilot_it12',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_check_loc(9, 'R', false, [0 0 0], 20, 'pre-pilot_it10',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+plot_transducer_pos(parameters, 9, false, 'Functional', 'mechanicalindex', 'Structural', 'scalp');
+% NBM_check_loc(9, 'R', false, [0 0 0], 50, 'pre-pilot_it8',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+
+% NBM_run(9, 'R', false, 4, 50, 'pre-pilot_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
+% NBM_run(9, 'R', false, 0, 50, 'pre-pilot_it3',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 % NBM_run(102, 'R', false, 4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
 % NBM_run(103, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');
 % NBM_run(104, 'R', true,  4, 60, 'for_game',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'no_sim_just_setup'}, 'none');

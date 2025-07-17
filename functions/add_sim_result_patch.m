@@ -1,4 +1,4 @@
-function data = add_sim_result_patch(parameters, sbj_ID, varargin)
+function data = add_sim_result_patch(parameters, sbj_ID, DV, varargin)
 
     % TODO consider a clustering approach (DBSCAN?), and option to remove the near
     % field
@@ -28,7 +28,8 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
 
     % sbj_ID = parameters.subject_subfolder;
     data_folder = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));
-    data_file = fullfile(data_folder, sprintf('sub-%03d_layered_final_intensity%s.nii.gz', sbj_ID, parameters.results_filename_affix));
+
+    data_file = fullfile(data_folder, sprintf('sub-%03d_layered_final_%s%s.nii.gz', sbj_ID, DV, parameters.results_filename_affix));
     % % TODO handle if data_file does not exist: create nifti
     % if ~isfile(data_file)
     %     base_fname = char(fullfile(parameters.output_dir, sprintf('sub-%03d_%s_final_', subject_id, parameters.simulation_medium)));
@@ -61,7 +62,7 @@ function data = add_sim_result_patch(parameters, sbj_ID, varargin)
         within_brain = ~within_brain;
     
         % limit to brain
-        % data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
+        data(~within_brain) = 0; % TODO check whether to enable (what makes more sense?)
     end
 
     % plot position of max:

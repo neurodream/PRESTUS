@@ -9,7 +9,7 @@ addpath('functions');
 addpath(genpath('toolboxes'));
 
 % base config ("hard" params)
-parameter_fids = {'default_paths_windows', 'nico_test_double_acoustic_same_temp0_config', 'IS_L_100mm_R_75mm', 'heating_sim'};
+parameter_fids = {'default_paths_windows', 'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'};
 parameters_fnames = {};
 for i = 1:numel(parameter_fids)
     fname = parameter_fids{i};
@@ -24,9 +24,9 @@ parameters = parameters_load_files;
 
 cd(fullfile(parameters_load_files.data_path, 'sim_outputs'));
 
-subj_ID = 1;
-ID_sham   = 'L+z-r_R+z-r_fixMI_it11_imprecisionnone_120325_0913';%'L+z-r_R+z-r_it8_heatingtimeline_imprecisionnone';
-ID_active = 'L+z--r_R+z--r_fixMI_it11_imprecisionnone_120325_0911';%'L+z--r_R--r_it8_heatingtimeline_imprecisionnone';
+subj_ID = 7;
+ID_sham   = 'L+z--r_R+z--r_pre-pilot_it4_imprecisionnone_190625_1409';%'L+z-r_R+z-r_it8_heatingtimeline_imprecisionnone';
+ID_active = 'L+z--r_R+z--r_pre-pilot_it4_imprecisionnone_190625_1409';%'L+z--r_R--r_it8_heatingtimeline_imprecisionnone';
 
 filename_sham = fullfile(parameters_load_files.data_path, 'sim_outputs', [sprintf('sub-%03d/sub-%03d', subj_ID, subj_ID) '_parameters' ID_sham '*']);
 files = dir(filename_sham);

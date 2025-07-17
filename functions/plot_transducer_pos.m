@@ -72,6 +72,69 @@ if strcmp(p.Results.Structural, 'skull')
 end
 
 
+% entry point left transducer
+
+V = struct_patch.Vertices;    % Nx3
+F = struct_patch.Faces;       % Mx3
+
+P1 = parameters.transducers(1).pos_t1_grid;
+P2 = parameters.transducers(1).focus_pos_t1_grid;
+d  = P2 - P1;                 % direction
+
+X = [];
+for k = 1:size(F,1)
+    tri = V(F(k,:),:);
+    n   = cross(tri(2,:)-tri(1,:),tri(3,:)-tri(1,:));
+    denom = n*d';
+    if abs(denom)<eps, continue, end
+    t = n*(tri(1,:)-P1)'/denom;
+    if t<0 || t>1, continue, end
+    P = P1 + t*d;
+    % inside-triangle test (barycentric)
+    u = tri(2,:)-tri(1,:); v = tri(3,:)-tri(1,:);
+    w = P - tri(1,:);
+    denom2 = dot(u,u)*dot(v,v)-dot(u,v)^2;
+    s = (dot(u,u)*dot(w,v)-dot(u,v)*dot(w,u))/denom2;
+    r = (dot(v,v)*dot(w,u)-dot(u,v)*dot(w,v))/denom2;
+    if s>=0 && r>=0 && s+r<=1
+        X = P; break
+    end
+end
+
+disp('ENTRY LEFT TRANSDUCER')
+disp(X);
+
+
+
+P1 = parameters.transducers(2).pos_t1_grid;
+P2 = parameters.transducers(2).focus_pos_t1_grid;
+d  = P2 - P1;                 % direction
+
+X = [];
+for k = 1:size(F,1)
+    tri = V(F(k,:),:);
+    n   = cross(tri(2,:)-tri(1,:),tri(3,:)-tri(1,:));
+    denom = n*d';
+    if abs(denom)<eps, continue, end
+    t = n*(tri(1,:)-P1)'/denom;
+    if t<0 || t>1, continue, end
+    P = P1 + t*d;
+    % inside-triangle test (barycentric)
+    u = tri(2,:)-tri(1,:); v = tri(3,:)-tri(1,:);
+    w = P - tri(1,:);
+    denom2 = dot(u,u)*dot(v,v)-dot(u,v)^2;
+    s = (dot(u,u)*dot(w,v)-dot(u,v)*dot(w,u))/denom2;
+    r = (dot(v,v)*dot(w,u)-dot(u,v)*dot(w,v))/denom2;
+    if s>=0 && r>=0 && s+r<=1
+        X = P; break
+    end
+end
+
+disp('ENTRY LEFT TRANSDUCER')
+disp(X);
+
+
+
 xlabel('X');
 ylabel('Y');
 zlabel('Z');
@@ -119,9 +182,9 @@ for transducer = parameters.transducers
 
 end
 
-if strcmp(p.Results.Functional, 'intensity') % TODO add others
-    add_sim_result_patch(parameters, sbj_ID, 'HeadData', layers, 'CutoffPerc', p.Results.CutoffPerc, 'LowCutoff', p.Results.LowCutoff); % 0.9998
-end
+% if strcmp(p.Results.Functional, 'intensity') % TODO add others
+    add_sim_result_patch(parameters, sbj_ID, p.Results.Functional, 'HeadData', layers, 'CutoffPerc', p.Results.CutoffPerc, 'LowCutoff', p.Results.LowCutoff); % 0.9998
+% end
 
 % plot3(target_L(1), target_L(2), target_L(3), 'k.', 'MarkerSize', 20);
 % plot3(target_R(1), target_R(2), target_R(3), 'k.', 'MarkerSize', 20);

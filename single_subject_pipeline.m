@@ -267,7 +267,10 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
             makeresampler('nearest', 'fill'), [1 2 3], [1 2 3], orig_hdr.ImageSize, [], 0)) ;
         niftiwrite(alpha_coeff, filename_alpha_coeff, orig_hdr, 'Compressed',true);
         clear filename_alpha_coeff alpha_coeff;
-    end    
+    end
+    
+    absorption_fraction = kwave_medium.absorption_fraction;
+    kwave_medium = rmfield(kwave_medium, 'absorption_fraction');
 
     %% SETUP SOURCE
     % For more documentation, see 'setup_grid_source_sensor'
@@ -314,6 +317,11 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
     % also stores results based on config specs
     if parameters.run_acoustic_sims && confirm_overwriting(filename_sensor_data, parameters) && (parameters.interactive == 0 || confirmation_dlg('Running the simulations will take a long time, are you sure?', 'Yes', 'No'))
         sensor_data = run_simulations(kgrid, kwave_medium, source, sensor, kwave_input_args, parameters);
+
+        % re-add fields for future loading
+        kwave_medium.temp_0 = temp_0; % clear temp_0; % TODO why cleared?
+        kwave_medium.absorption_fraction = absorption_fraction; clear absorption_fraction;
+
         if ~isfield(parameters, 'acoustic_outputs') || ~isfield(parameters.acoustic_outputs, 'raw') || parameters.acoustic_outputs.raw
             if strcmp(parameters.simulation_medium, 'water')
                 % posthoc water test (should not be overwritten)
@@ -325,6 +333,11 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
     else
         disp('Skipping, the file already exists, loading it instead.')
         load(filename_sensor_data, 'sensor_data')
+
+        % re-add fields for future loading
+        kwave_medium.temp_0 = temp_0; % clear temp_0; % TODO why cleared?
+        kwave_medium.absorption_fraction = absorption_fraction; clear absorption_fraction;
+        
     end
 
 
@@ -438,6 +451,9 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
             % add starting temperature
             kwave_medium.temp_0 = temp_0;
 
+            % convert attenuation into absorption
+            kwave_medium.alpha_coeff = kwave_medium.alpha_coeff .* kwave_medium.absorption_fraction;
+
             % For more documentation, see 'run_heating_simulations'
             [kwaveDiffusion, time_status_seq, maxT, focal_planeT, maxCEM43, focal_planeCEM43, tissue_heat, tissue_CEM43]= ...
                 run_heating_simulations(sensor_data, kgrid, kwave_medium, sensor, source, parameters, trans_pos_final);
@@ -501,23 +517,24 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
         plot_heating_sims(focal_planeT, time_status_seq, parameters, trans_pos_final(1,:), medium_masks, focal_planeCEM43);
                 
         % Plots the maximum temperature in the segmented brain
-        if output_table.maxT < 38
-            temp_color_range = [37, 38];
-        else
-            temp_color_range = [37, output_table.maxT];
-        end
-
-        % plot ISPPA superimposed on segmentation
-        [~,~,~,~,~,~,~,h]=plot_isppa_over_image(...
-            maxT, segmented_image_cropped, source_labels, parameters, ...
-            {'y', focus_pos_final(2)}, trans_pos_final, focus_pos_final, ...
-            highlighted_pos, 'isppa_color_range', temp_color_range );
+        % if output_table.maxT < 38
+        %     temp_color_range = [37, 38];
+        % else
+            temp_color_range = [37, max(maxT(:))];%output_table.maxT];
+        % end
         
-        output_plot_filename = fullfile(parameters.output_dir,...
-            sprintf('sub-%03d_%s_maxT%s.png',...
-            subject_id, parameters.simulation_medium, parameters.results_filename_affix));
-        saveas(h, output_plot_filename, 'png')
-        close(h);
+        % TODO does not work
+        % % plot ISPPA superimposed on segmentation
+        % [~,~,~,~,~,~,~,h]=plot_isppa_over_image(...
+        %     maxT, segmented_image_cropped, source_labels, parameters, ...
+        %     {'y', focus_pos_final(2)}, trans_pos_final, focus_pos_final, ...
+        %     highlighted_pos, 'isppa_color_range', temp_color_range );
+        % 
+        % output_plot_filename = fullfile(parameters.output_dir,...
+        %     sprintf('sub-%03d_%s_maxT%s.png',...
+        %     subject_id, parameters.simulation_medium, parameters.results_filename_affix));
+        % saveas(h, output_plot_filename, 'png')
+        % close(h);
     end
 
     %% Plots the data on the original T1 image and in MNI space
@@ -646,12 +663,12 @@ function [output_pressure_file, parameters, data] = single_subject_pipeline(subj
         data.mechanicalindex_FW = data_FW.mechanicalindex;
     end
     
-    if contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered')
-        postprocessing_quantification_acoustics(subject_id, parameters, medium_masks, output_pressure_file, data);
-        if isfield(parameters, 'run_heating_sims') && parameters.run_heating_sims 
-            postprocessing_quantification_heating(subject_id, parameters, medium_masks, output_pressure_file, data);
-        end
-    end
+    % if contains(parameters.simulation_medium, 'skull') || contains(parameters.simulation_medium, 'layered')
+    %     postprocessing_quantification_acoustics(subject_id, parameters, medium_masks, output_pressure_file, data);
+    %     if isfield(parameters, 'run_heating_sims') && parameters.run_heating_sims 
+    %         postprocessing_quantification_heating(subject_id, parameters, medium_masks, output_pressure_file, data);
+    %     end
+    % end
 
     disp('Pipeline finished successfully');
 end
