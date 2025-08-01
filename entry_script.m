@@ -34,12 +34,27 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 % NBM_run( 8, 'R', false, 1, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 % NBM_run(10, 'R', false, 4, 100, 'fixMI_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 
-load('../../scans/sim_outputs/sub-009/sub-009_parametersL--r_R--r_pre-pilot_it14_imprecisionnone.mat', 'parameters');
+load('../../scans/sim_outputs/sub-007/sub-007_parametersL+z--r_R+z--r_pilot_titration_it4_imprecisionnone.mat', 'parameters');
+plot_transducer_pos(parameters, 7, true, 'Functional', 'pressure', 'Structural', 'scalp', 'CutoffPerc', 0.9995); % , 'LowCutoff', 400000
+% load('../../scans/sim_outputs/sub-007/sub-007_parametersL--r_R--r_pre-pilot_it21_imprecisionnone.mat', 'parameters');
+% plot_transducer_pos(parameters, 7, true, 'Functional', 'pressure', 'Structural', 'scalp', 'CutoffPerc', 0.9995, 'LowCutoff', 400000);
+% load('../../scans/sim_outputs/sub-009/sub-009_parametersL--r_R--r_pre-pilot_it21_imprecisionnone.mat', 'parameters');
+% plot_transducer_pos(parameters, 9, true, 'Functional', 'pressure', 'Structural', 'scalp', 'CutoffPerc', 0.9995, 'LowCutoff', 400000);
 
-% NBM_run(9, 'R', false, [0 0 0], 25, 'pre-pilot_it19',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
-% NBM_run(9, 'R', false, [0 0 0], 15, 'pre-pilot_it12',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'heating_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 0], 0, 'pilot_titration_it6',       {'base_config_BFTUS', '180sec_5Hz_DC50_ramp20', 'R100-26_R75-26', 'acoustic_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 0], 0, 'pilot_titration_it5',       {'base_config_BFTUS', '180sec_5Hz_DC50_ramp20', 'R100-26_R75-35', 'heating_sim'}, 'none');
+% NBM_run(7, 'R', false, [0 0 4], 0, 'pilot_titration_it4',       {'base_config_BFTUS', '180sec_5Hz_DC50_ramp20', 'R100-26_R75-35', 'heating_sim'}, 'none');
+% NBM_run(7, 'R', false, [0 0 4], 0, 'pilot_titration_it5',       {'base_config_BFTUS', '180sec_5Hz_DC50_ramp20', 'R100-26_R75-26', 'heating_sim'}, 'none');
+% NBM_run(2, 'R', false, [0 0 0], 15, 'pre-pilot_it21',       {'nico_test_double_acoustic_same_temp0_config', 'sbj9_100mm_75mm', 'heating_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 0], 15, 'pre-pilot_it21',       {'nico_test_double_acoustic_same_temp0_config', 'sbj9_100mm_75mm', 'heating_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 4], 0, 'sanity_check1_part1',       {'base_config_BFTUS', 'R100-26_R75-26', 'acoustic_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 4], 0, 'sanity_check1_part2',       {'base_config_BFTUS', 'R100-26_R75-26', 'acoustic_sim'}, 'none');
+
+
+% NBM_run(7, 'R', false, [0 0 4], 15, 'pilot_titration_it4',       {'nico_test_double_acoustic_same_temp0_config', 'R100-26_R75-26', 'heating_sim'}, 'none');
+% NBM_run(7, 'R', false, [0 0 4], 15, 'pilot_titration_it5',       {'nico_test_double_acoustic_same_temp0_config', 'R100-26_R75-35', 'heating_sim'}, 'none');
+% NBM_run(9, 'R', false, [0 0 0], 15, 'pilot_titration_it5',       {'nico_test_double_acoustic_same_temp0_config', 'R100-26_R75-35', 'heating_sim'}, 'none');
 % NBM_check_loc(9, 'R', false, [0 0 0], 20, 'pre-pilot_it10',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
-plot_transducer_pos(parameters, 9, false, 'Functional', 'mechanicalindex', 'Structural', 'scalp');
 % NBM_check_loc(9, 'R', false, [0 0 0], 50, 'pre-pilot_it8',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');
 
 % NBM_run(9, 'R', false, 4, 50, 'pre-pilot_it4',       {'nico_test_double_acoustic_same_temp0_config', 'IS_double_100mm', 'acoustic_sim'}, 'none');

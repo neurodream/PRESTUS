@@ -1,0 +1,45 @@
+%% RAS -> MNI
+% set one of the two blocks below
+
+% ---------- OPTION A: SPM deformation field ----------
+use_spm = true;
+ras      = [-83.362 31.322 -1.336];              % RAS (mm) from Slicer
+ydef     = '/path/to/y_sub-009_T1.nii';           % SPM normalize output (native->MNI)
+
+% ---------- OPTION B: FSL FLIRT affine ----------
+use_flirt = false;
+ras       = [-83.362 31.322 -1.336];              % RAS (mm) from Slicer
+t1_native = '/home/sleep/nicade/Documents/scans/sub-009_T1.nii.gz';
+mni_tpl   = '/path/to/MNI152_T1_1mm.nii.gz';
+flirt_mat = '/path/to/native2mni.mat';            % from flirt -omat
+
+%% run
+if use_spm
+    mni = ras2mni_spm(ras, ydef);
+    fprintf('MNI = [%g %g %g]\n', mni)
+elseif use_flirt
+    mni = ras2mni_flirt(ras, t1_native, mni_tpl, flirt_mat);
+    fprintf('MNI = [%g %g %g]\n', mni)
+else
+    error('Select one option by setting its flag to true')
+end
+
+%% -------- functions --------
+
+function mni = ras2mni_spm(ras, ydef)
+    % requires SPM12 on path
+    Vx = spm_vol([ydef ',1']);
+    Vy = spm_vol([ydef ',2']);
+    Vz = spm_vol([ydef ',3']);
+    p  = ras(:);
+    mni = [spm_get_data(Vx, p) spm_get_data(Vy, p) spm_get_data(Vz, p)];
+end
+
+function mni = ras2mni_flirt(ras, t1_native, mni_tpl, flirt_mat)
+    % uses FLIRT voxel->voxel matrix to map native mm -> MNI mm
+    A_nat = niftiinfo(t1_native).Transform.T';     % native voxel -> mm (RAS)
+    A_mni = niftiinfo(mni_tpl).Transform.T';       % MNI voxel -> mm
+    M_vox = readmatrix(flirt_mat);                 % 4x4 FLIRT matrix (voxel->voxel)
+    x = (A_mni * M_vox * inv(A_nat) * [ras 1]')';
+    mni = x(1:3);
+end

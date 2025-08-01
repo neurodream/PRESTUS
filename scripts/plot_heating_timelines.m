@@ -14,7 +14,7 @@ addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donde
 
 % base config ("hard" params)
 path_params = load_parameters('nico_test_double_acoustic_same_temp0_config.yaml');
-parameters = load('../../scans/sim_outputs/sub-009/sub-009_parametersL--r_R--r_pre-pilot_it19_imprecisionnone.mat', 'parameters');
+parameters = load('../../scans/sim_outputs/sub-009/sub-009_parametersL--r_R--r_pre-pilot_it21_imprecisionnone.mat', 'parameters');
 parameters = parameters.parameters;
 parameters.data_path = path_params.data_path;
 %load_parameters('nico_test_double_acoustic_same_temp0_config.yaml');
@@ -25,7 +25,7 @@ sbj_ID = 9;
 
 disp(['subject ' num2str(sbj_ID)]);
 
-filename_glob = sprintf('sub-%03d/sub-%03d_layered_heating_resL--r_R--r_pre-pilot_it19_imprecisionnone.mat', sbj_ID, sbj_ID);
+filename_glob = sprintf('sub-%03d/sub-%03d_layered_heating_resL--r_R--r_pre-pilot_it21_imprecisionnone.mat', sbj_ID, sbj_ID);
 f = dir(fullfile(filepath, filename_glob));
 load(fullfile(f.folder, f.name), 'time_status_seq', 'tissue_CEM43', 'tissue_heat');
 

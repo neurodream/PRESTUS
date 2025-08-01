@@ -130,7 +130,7 @@ for k = 1:size(F,1)
     end
 end
 
-disp('ENTRY LEFT TRANSDUCER')
+disp('ENTRY RIGHT TRANSDUCER')
 disp(X);
 
 
@@ -207,7 +207,7 @@ target_patch = patch(isosurface(ROItarget_R_smooth, 0.5)); % Extract and plot ou
 set(target_patch, 'FaceAlpha', 1, 'FaceColor', 'green', 'EdgeColor', 'none'); % Customize appearance
 isonormals(ROItarget_R_smooth, target_patch); % Add normals for proper lighting
 
-view(62, 36);
+view(-200,43);
 
 if save
     data_folder = fullfile(parameters.data_path, 'sim_outputs', sprintf('sub-%03d', sbj_ID));

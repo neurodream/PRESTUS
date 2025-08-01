@@ -1,159 +1,159 @@
-close all; clear; clc;
+% tissue_based_postprocessing_to_xlsx.m
+% One row per run, one sheet per metric
+% Creates tissue_based_postprocessing.xlsx if missing, otherwise appends
+
+%% housekeeping
+close all; clear; clc
 
 currentFile = matlab.desktop.editor.getActiveFilename;
-rootpath = fileparts(currentFile);
-cd(rootpath); % repos/PRESTUS_forked/scripts
-cd ..
+rootpath    = fileparts(currentFile);
+cd(rootpath)                 % .../repos/PRESTUS_forked/scripts
+cd ..                        % .../repos/PRESTUS_forked
 
-%% parameters
-sbj_ID = 9; % careful: still hardcoded below
-iteration = 19;
+%% user params
+sbj_ID    = 9;
+iteration = 5;
+prefix    = 'pilot_titration';
+filepath  = sprintf('../../scans/sim_outputs/sub-%03d', sbj_ID);
+% filepath  = '/project/2425076.01/piloting/titration_data/';
+outpath   = '/project/2425076.01/piloting';
+% outpath   = 'P:/2425076.01/piloting';
+xlsx_name = 'tissue_based_postprocessing.xlsx';
 
-%%
+segmentation_folder = sprintf('/home/sleep/nicade/Documents/scans/segmentation_results/m2m_sub-%03d', sbj_ID);
+% segmentation_folder = sprintf('M:/Documents/scans/segmentation_results/m2m_sub-%03d', sbj_ID);
+
+if sbj_ID == 7, add_z = '+z'; else, add_z = ''; end
+
+if isempty(outpath), xlsx_file = fullfile(pwd, xlsx_name); else, xlsx_file = fullfile(outpath, xlsx_name); end
+
+%% lookup target coordinates
 T = readtable('data/transducer_pos/position_LUT.xlsx');
 target_coord = [T.x_r(T.sbj_ID == sbj_ID) T.y_r(T.sbj_ID == sbj_ID) T.z_r(T.sbj_ID == sbj_ID)];
+target_coord = round(target_coord);  % just in case
 
-currentFile = matlab.desktop.editor.getActiveFilename;
-rootpath = fileparts(currentFile);
-cd(rootpath); % repos/PRESTUS_forked/
-cd ..
-
-% add paths
+%% paths
 addpath('functions')
-addpath(genpath('toolboxes')) 
-addpath('/home/common/matlab/fieldtrip/qsub') % uncomment if you are using Donders HPC
+addpath(genpath('toolboxes'))
+addpath('/home/common/matlab/fieldtrip/qsub')  % uncomment for Donders HPC
 
-% load parameters
-load(sprintf('../../scans/sim_outputs/sub-%03d/sub-%03d_parametersL--r_R--r_pre-pilot_it%d_imprecisionnone.mat', sbj_ID, sbj_ID, iteration), 'parameters');
+%% load sim parameters
+fname      = sprintf('sub-%03d_parametersL%s--r_R%s--r_%s_it%d_imprecisionnone.mat', sbj_ID, add_z, add_z, prefix, iteration);
+param_file = fullfile(filepath, fname);
+% param_file = sprintf(fullfile(filepath, 'sub-%03d_parametersL+z--r_R+z--r_%s_it%d_imprecisionnone.mat'), sbj_ID, prefix, iteration);
+load(param_file, 'parameters')
 
-%% limit to brain
-% make sure the subject ID match of seg_file and target:
-segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
-filename_segmented = fullfile(segmentation_folder, 'final_tissues.nii.gz');
-
-layers = niftiread(filename_segmented);
+%% masks (brain, skull)
+% segmentation_folder = fullfile(parameters.seg_path, sprintf('m2m_sub-%03d', sbj_ID));
+filename_segmented  = fullfile(segmentation_folder, 'final_tissues.nii.gz');
+layers      = niftiread(filename_segmented);
 layers_info = niftiinfo(filename_segmented);
-% [layers, layers_info] = swapNiftiXY(layers, layers_info); % x and y seem swapped in nifti, need to be swapped back
 
-head = layers > 0;
-
-head = fill_head(head);
+head  = layers > 0;
+head  = fill_head(head);          % user function assumed on path
 
 skull = layers == 7 | layers == 8;
 
-% get the brain (assuming "head" exists globally)
-within_brain = ismember(layers, [1 2 3]); % brain
-
-% shrink the shape: conservative brain estimate, so to prevent
-% "near field" in estimation of max pos
-se = strel('sphere', 1); % A spherical structuring element with a radius of 1
+within_brain = ismember(layers, [1 2 3]);      % brain
+se = strel('sphere', 1);
 within_brain = imerode(within_brain, se);
-
-% within = ismember(head, [1 2 3 4 7 8 9]); % skull
 within_brain = ~within_brain;
 within_brain = imfill(within_brain, 'holes');
 within_brain = ~within_brain;
 
-%% input params (TODO)
+%% helper for target neighborhood
+cube_rad = 3;
+cx = target_coord(1); cy = target_coord(2); cz = target_coord(3);
+target_cube_idx = {cx-cube_rad:cx+cube_rad, cy-cube_rad:cy+cube_rad, cz-cube_rad:cz+cube_rad};
 
-disp('INPUT PARAMS')
-disp('left transducer optimal distance');
-disp(parameters.transducers(1).optim_params.focal_distance_mm);
+%% PRESSURE (MPa)
+fname      = sprintf('sub-%03d_layered_final_pressureL%s--r_R%s--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, add_z, add_z, prefix, iteration);
+data = niftiread(fullfile(filepath, fname));
+data = data / 1e6;
 
-%% acoustic postprocessing
+rec = makeRec(sbj_ID, iteration, prefix, data, within_brain, target_coord, target_cube_idx);
+appendRow(xlsx_file, 'PRESSURE_MPa', rec)
 
-disp('PRESSURE (MPa)');
-data = niftiread(sprintf('../../scans/sim_outputs/sub-%03d/sub-%03d_layered_final_pressureL--r_R--r_pre-pilot_it%d_imprecisionnone.nii.gz', sbj_ID, sbj_ID, iteration));
-data = data / 1000000;
-disp('global:');
-disp(max(data(:)));
-data_brain = data;
-data_brain(~within_brain) = 0;
-disp('within brain:');
-disp(max(data_brain(:)));
-disp('at target:');
-disp(data(target_coord(1),target_coord(2),target_coord(3)));
-disp('around target (max):');
-target_cube = data( ...
-    target_coord(1)-3:target_coord(1)+3, ...
-    target_coord(2)-3:target_coord(2)+3, ...
-    target_coord(3)-3:target_coord(3)+3 ...
-    );
-disp(max(target_cube(:)));
-disp('around target (median):');
-disp(median(target_cube(:)));
-disp('');
+%% INTENSITY (W_per_cm2)
+% data = niftiread(fullfile(filepath, sprintf('sub-%03d_layered_final_intensityL+z--r_R+z--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, prefix, iteration)));
+fname      = sprintf('sub-%03d_layered_final_intensityL%s--r_R%s--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, add_z, add_z, prefix, iteration);
+data = niftiread(fullfile(filepath, fname));
+rec = makeRec(sbj_ID, iteration, prefix, data, within_brain, target_coord, target_cube_idx);
+appendRow(xlsx_file, 'INTENSITY_W_cm2', rec)
 
-disp('INTENSITY (W/cm²)');
-data = niftiread(sprintf('../../scans/sim_outputs/sub-%03d/sub-%03d_layered_final_intensityL--r_R--r_pre-pilot_it%d_imprecisionnone.nii.gz', sbj_ID, sbj_ID, iteration));
-disp('global:');
-disp(max(data(:)));
-data_brain = data;
-data_brain(~within_brain) = 0;
-disp('within brain:');
-disp(max(data_brain(:)));
-disp('at target:');
-disp(data(target_coord(1),target_coord(2),target_coord(3)));
-disp('around target (max):');
-target_cube = data( ...
-    target_coord(1)-3:target_coord(1)+3, ...
-    target_coord(2)-3:target_coord(2)+3, ...
-    target_coord(3)-3:target_coord(3)+3 ...
-    );
-disp(max(target_cube(:)));
-disp('around target (median):');
-disp(median(target_cube(:)));
-disp('');
+%% MECHANICAL_INDEX
+% data = niftiread(fullfile(filepath, sprintf('sub-%03d_layered_final_mechanicalindexL+z--r_R+z--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, prefix, iteration)));
+fname      = sprintf('sub-%03d_layered_final_mechanicalindexL%s--r_R%s--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, add_z, add_z, prefix, iteration);
+data = niftiread(fullfile(filepath, fname));
+rec = makeRec(sbj_ID, iteration, prefix, data, within_brain, target_coord, target_cube_idx);
+appendRow(xlsx_file, 'MECHANICAL_INDEX', rec)
 
-disp('MECHANICAL INDEX');
-data = niftiread(sprintf('../../scans/sim_outputs/sub-%03d/sub-%03d_layered_final_mechanicalindexL--r_R--r_pre-pilot_it%d_imprecisionnone.nii.gz', sbj_ID, sbj_ID, iteration));
-disp('global:');
-disp(max(data(:)));
-data_brain = data;
-data_brain(~within_brain) = 0;
-disp('within brain:');
-disp(max(data_brain(:)));
-disp('at target:');
-disp(data(target_coord(1),target_coord(2),target_coord(3)));
-disp('around target (max):');
-target_cube = data( ...
-    target_coord(1)-3:target_coord(1)+3, ...
-    target_coord(2)-3:target_coord(2)+3, ...
-    target_coord(3)-3:target_coord(3)+3 ...
-    );
-disp(max(target_cube(:)));
-disp('around target (median):');
-disp(median(target_cube(:)));
-disp('');
+%% CEM43
+% data = niftiread(fullfile(filepath, sprintf('sub-%03d_final_CEM43L+z--r_R+z--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, prefix, iteration)));
+fname      = sprintf('sub-%03d_final_CEM43L%s--r_R%s--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, add_z, add_z, prefix, iteration);
+data = niftiread(fullfile(filepath, fname));
+rec = makeRec(sbj_ID, iteration, prefix, data, within_brain, target_coord, target_cube_idx);
+rec.skull_max = max(data(skull));
+appendRow(xlsx_file, 'CEM43', rec)
 
-%% heating
+%% TEMP (degC)
+% data = niftiread(fullfile(filepath, sprintf('sub-%03d_final_tempL+z--r_R+z--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, prefix, iteration)));
+fname      = sprintf('sub-%03d_final_tempL%s--r_R%s--r_%s_it%d_imprecisionnone.nii.gz', sbj_ID, add_z, add_z, prefix, iteration);
+data = niftiread(fullfile(filepath, fname));
+rec = makeRec(sbj_ID, iteration, prefix, data, within_brain, target_coord, target_cube_idx);
+rec.skull_max = max(data(skull));
+appendRow(xlsx_file, 'TEMP_degC', rec)
 
-disp('CEM43');
+disp('done')
 
-data = niftiread(sprintf('../../scans/sim_outputs/sub-%03d/sub-%03d_final_CEM43L--r_R--r_pre-pilot_it%d_imprecisionnone.nii.gz', sbj_ID, sbj_ID, iteration));
-disp('global:');
-disp(max(data(:)));
-data_brain = data;
-data_brain(~within_brain) = 0;
-disp('within brain:');
-disp(max(data_brain(:)));
-% disp('at target:');
-% disp(data(target_coord(1),target_coord(2),target_coord(3)));
-% disp('around target (max):');
-% target_cube = data( ...
-%     target_coord(1)-3:target_coord(1)+3, ...
-%     target_coord(2)-3:target_coord(2)+3, ...
-%     target_coord(3)-3:target_coord(3)+3 ...
-%     );
-% disp(max(target_cube(:)));
-% disp('around target (median):');
-% disp(median(target_cube(:)));
-% disp('');
-data_skull = data(skull);
-disp('within skull');
-disp(max(data_skull(:)));
+%% -------- local functions --------
+function rec = makeRec(sbj_ID, iteration, prefix, data, brain_mask, target_coord, target_cube_idx)
+    data_brain = data;
+    data_brain(~brain_mask) = 0;
 
-%% (TODO) append to file
+    at_target   = data(target_coord(1), target_coord(2), target_coord(3));
+    cube_vals   = data(target_cube_idx{1}, target_cube_idx{2}, target_cube_idx{3});
+    around_max  = max(cube_vals(:));
+    around_med  = median(cube_vals(:));
 
-% newRow = {'Charlie', 92};
-% writecell(newRow, 'data/prepilot_titrations.xlsx', 'WriteMode', 'append')
+    rec = table( ...
+        sbj_ID, iteration, string(prefix), ...
+        max(data(:)), ...
+        max(data_brain(:)), ...
+        at_target, ...
+        around_max, ...
+        around_med, ...
+        'VariableNames', {'sbj_ID','iteration','prefix', ...
+                          'global_max','brain_max','at_target', ...
+                          'around_max','around_med'});
+end
+
+function appendRow(fn, sheet, Tnew)
+    % create file/sheet -> write header
+    if ~isfile(fn)
+        writetable(Tnew, fn, 'Sheet', sheet, 'WriteVariableNames', true)
+        return
+    end
+
+    % check if sheet exists
+    try
+        sh = sheetnames(fn);
+    catch
+        [~, sh] = xlsfinfo(fn);
+    end
+    if ~any(strcmpi(sh, sheet))
+        writetable(Tnew, fn, 'Sheet', sheet, 'WriteVariableNames', true)
+        return
+    end
+
+    % sheet exists -> append without header
+    try
+        writetable(Tnew, fn, 'Sheet', sheet, ...
+            'WriteMode', 'append', 'WriteVariableNames', false)
+    catch   % older MATLAB without WriteMode
+        Told = readtable(fn, 'Sheet', sheet);
+        startRow = height(Told) + 2;          % +1 for header, +1 to start next row
+        writetable(Tnew, fn, 'Sheet', sheet, ...
+            'Range', sprintf('A%d', startRow), 'WriteVariableNames', false)
+    end
+end

@@ -1,0 +1,41 @@
+# 100mm transducers
+transducers:
+  - name: left  # any identifier will do, e.g. serial number, intended target, ...
+    n_elements: 10.0
+    Elements_ID_mm: [10.0, 22.1, 29.8, 36.0, 41.4, 46.3, 50.7, 54.9, 58.7, 62.4]
+    Elements_OD_mm: [21.1, 28.8, 35.0, 40.4, 45.3, 49.7, 53.9, 57.8, 61.5, 65.0]
+    curv_radius_mm: 100.0
+    dist_to_plane_mm: 92.7
+    source_freq_hz: 300000.0
+    source_phase_deg: [0.0, 5.49425474504238, 1.3552320434876994, 22.14701612694256,
+      10.864427315227145, 35.972459532459844, 14.43762101405459, 31.645127455513308,
+      23.332994526889053, 6.561317542308285E-4]
+    source_amp: [149246.0, 149246.0, 149246.0, 149246.0, 149246.0, 149246.0, 149246.0,
+      149246.0, 149246.0, 149246.0]
+    source_phase_rad: [0.0, 0.09589283524431114, 0.023653261287391328, 0.3865383509074301,
+      0.18962002799432157, 0.6278378588818443, 0.25198402285037513, 0.5523116663119626,
+      0.40723757884403056, 1.1451659438214191E-5]
+    set_focus_wrt_exit_plane_mm: 92.5
+    set_intensity_w_per_cm2: 26.0865
+    pos_t1_grid: [0, 0, 0] # Position on T1 grid [T1 grid space] (can be left out if importing location data) # TODO find way to read it out parametrically based on subject ID
+    focus_pos_t1_grid: [0, 0, 0] # Stimulation target on T1 grid [T1 grid space] (again, can be left out if importing location data) # TODO find way to read it out parametrically based on subject ID (or consider one config per sbj); # TODO consider adding this to transducer (benefits: each transd can have a focus pos)
+
+  - name: right # any identifier will do, e.g. serial number, intended target, ...
+    n_elements: 10.0
+    Elements_ID_mm: [10.0, 22.3, 30.0, 36.3, 41.7, 46.5, 51.0, 55.1, 58.9, 62.5]
+    Elements_OD_mm: [21.3, 29.1, 35.3, 40.7, 45.6, 50.0, 54.1, 58.0, 61.6, 65.0]
+    curv_radius_mm: 75.0
+    dist_to_plane_mm: 65.3
+    source_freq_hz: 300000.0
+    source_phase_deg: [0.0, 32.19924103590709, 9.956285893689186E-4, 33.41277734625807, 
+      2.712511014710026E-4, 55.89267818094923, 5.588119907144934E-4, 34.061945533261074,
+      2.4992444622199916, 5.184970853167679]
+    source_amp: [118355.0, 118355.0, 118355.0, 118355.0, 118355.0, 118355.0, 118355.0,
+      118355.0, 118355.0, 118355.0]
+    source_phase_rad: [0.0, 0.5619827727198484, 1.7376997011474242E-5, 0.5831629769279767,
+      4.7342248203302295E-6, 0.975511262015159, 9.753109137591889E-6, 0.5944930991903814,
+      0.04362004467797388, 0.09049481300771545]
+    set_focus_wrt_exit_plane_mm: 65.0
+    set_intensity_w_per_cm2: 26.0865
+    pos_t1_grid: [0, 0, 0] # Position on T1 grid [T1 grid space] (can be left out if importing location data) # TODO find way to read it out parametrically based on subject ID
+    focus_pos_t1_grid: [0, 0, 0] # Stimulation target on T1 grid [T1 grid space] (again, can be left out if importing location data) # TODO find way to read it out parametrically based on subject ID (or consider one config per sbj); # TODO consider adding this to transducer (benefits: each transd can have a focus pos)

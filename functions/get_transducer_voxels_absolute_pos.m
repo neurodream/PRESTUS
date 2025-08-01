@@ -12,7 +12,7 @@ function [transducer_voxels] = get_transducer_voxels_absolute_pos(target, trans_
     % plot (TODO counterintuitive that plotting is in a "get" function
     line = plot3( ...
         [target(1), trans_pos(1)], [target(2), trans_pos(2)], [target(3), trans_pos(3)], ...
-        'Color', transducer_color, 'LineWidth', 4); %
+        'Color', transducer_color, 'LineWidth', 1); %
     
     line.Tag = patch_name;
     add_transducer_shape(trans_pos, target, 'Parameters', parameters, 'TargetType', 'none', 'PatchName', char(patch_name), 'Color', transducer_color);

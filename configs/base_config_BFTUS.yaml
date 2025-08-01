@@ -1,0 +1,112 @@
+# The configuration is structured using YAML (https://yaml.org/). Note that YAML uses spaces, not tabs, for identation.
+
+# !!! Important !!! Do not edit this document. Instead, copy (at least) the first segment into your own config file.
+
+#------------ This first segment of the config contains parameters mandatory for running a pipeline
+
+# Paths to T1 and T2 relative to data_path; all string substitutions will be done using subject_id
+t1_path_template: sub-%1$03d_T1.nii.gz 
+t2_path_template: sub-%1$03d_T2.nii.gz
+
+# select which medium setup to use: 'water' or 'layered'
+simulation_medium: layered
+
+# Important to note: the alpha values in 'alpha_0_true' are currently set for 500KHz transducers
+# These should be adjusted to the values shown in their respected comments below the medium parameters
+# We are still not entirely sure what alpha values best to use, so be critical of our and your own choices
+
+#------------ This second segment contains parameters that can be used based on the specific needs of the analysis
+
+# Should output be ordered based on subject id?
+subject_subfolder: 1
+
+# Optional affix for result files names
+results_filename_affix: '_doubletransducer_' # TODO implement in matlab to automatically add an underscore
+
+# This allows you to add additional paths and subpaths while running the pipeline
+paths_to_add: []
+subpaths_to_add: []
+
+# By default, SimNIBS segmentation results are not overwritten, unless enabled here
+overwrite_simnibs: 0
+
+# Can allow to only run specific components of the pipeline
+run_source_setup: 1 # Should we set up acoustic source? useful to switch off to look at initial segmentation results only
+run_acoustic_sims: 1 # Should we run the acoustic simulations? useful to switch off to look at initial segmentation results only
+run_heating_sims: 0 # Should we run the heating simulations? useful to switch off to look at initial segmentation results only
+run_posthoc_water_sims: 0 # Should we run the simulations in free water with exactly the same parameter? useful for double checking that the true intensity matches the desired one
+
+# options to directly output nifti files; can help speed up batch processes in some cases, but more memory intensive
+acoustic_outputs:
+  raw_mat: 1 # stores the variables 'sensor_data', 'kgrid', 'kwave_medium', 'source', 'sensor', 'kwave_input_args', 'parameters', 'inv_final_transformation_matrix', 't1_header' into a mat file ("legacy" option; defaults to true)
+  nifti_intensity: 1
+  nifti_pressure: 1
+  nifti_mechanicalindex: 1
+
+heating_outputs:
+  raw_mat: 1 # stores the variables 'kwaveDiffusion','time_status_seq', 'heating_window_dims','sensor','maxT','focal_planeT','maxCEM43','focal_planeCEM43', 'tissue_heat', 'tissue_CEM43' into a mat file ("legacy" option; defaults to true)
+  nifti_temp: 1
+  nifti_TD: 1
+
+# In interactive mode (1), the figures are shown and confirmation dialogs appear (the latter of which will halt the pipeline until confirmation)
+# In non-interactive mode (0), no plots are shown and no confirmation dialogs will 
+interactive: 0
+# Needs to be included if running in a non-interactive mode
+overwrite_files: 'never' # 'never' to never overwrite, 'always' to always overwrite, any other value to ask for confirmation
+
+# Should the script position_transducer_localite be used?
+transducer_from_localite: 0
+# Allows one to correct for varying distances between the infrared trackers attached to the transducer and the exit plane
+reference_transducer_distance_mm: 15 # (can only be used with the function 'transducer_from_localite')
+
+# Grid resolution (must be isotropic) 
+grid_step_mm: 0.5  # [mm]
+
+# These only need to be set manually if the simulations are done for water only
+# Select the desired simulation grid size (number of points per dimension)
+default_grid_size: 144
+default_grid_dims: [144, 144, 256]
+
+# Radius of the target area around the focus in which the ISPPA is averaged for the outputs
+focus_area_radius: 6 # [mm]
+
+# select PML size, the default one for 3D is 10 (PML is the layer used in
+# kWaves to absorb waves reaching the end of the computational grid,
+# http://www.k-wave.org/documentation/example_na_controlling_the_pml.php)
+pml_size: 10
+
+# Expansion factor for the cerebro-spinal fluid brain mask;
+# if the mask ends up being too big, try reducing it
+# (40 is the conservative default; the mask is dilated with csf_mask_expansion_factor/voxel_size_mm cubic kernel)
+csf_mask_expansion_factor: 40
+
+
+# Use the kwaveArray class for simulations
+use_kWaveArray: 0
+
+# Thresholds for smoothing the skull and other masks
+skull_smooth_threshold: 0.35 # (higher threshold means thinner mask, lower threshold means thicker mask)
+other_smooth_threshold: 0.5 # (higher threshold means thinner mask, lower threshold means thicker mask)
+
+# To what extent the computational grid can be expanded in order to get lower prime numbers to (potentially) speed up computations
+prime_factor_max_grid_expansion: 40
+
+# Select which k-Wave code to run (see 'run_simulations' for more documentation)
+#   MATLAB CPU code 'matlab_cpu'
+#   MATLAB GPU code 'matlab_gpu'
+#   C++ code (Interactive) 'cpp_interactive'
+#   C++ code (Non-Interactive) 'cpp_noninteractive'
+#   CUDA code 'cuda' (currently does not work at the Donders HPC, but 'matlab_gpu' works)
+code_type: matlab_gpu 
+
+# Only use this if you are using the Donders HPC
+# If not, you would have to do some things by hand (currently it only affects SimNIBS segmentation)
+using_donders_hpc: 1
+
+# Segmentation software (current options are 'headreco' and 'charm')
+segmentation_software: charm
+use_forceqform: 1
+
+# An optional path to LD_LIBRARY used during SimNIBS installation
+# If you experience an `undefined symbol` error in `create_mesh_surf.cpython-39-x86_64-linux-gnu.so`, set the next line to your LD_LIBRARY location
+ld_library_path: /opt/gcc/7.2.0/lib64
